@@ -14,6 +14,7 @@ awk 'BEGIN{OFS="\t"}{ print $1, $2, $2+1, $4 }' $gene_list > gene_starts.temp
 # You know what, just give me the whole path.
 predfile=$1
 gunzip -c $predfile | sed '/inflation/d' > pred.temp
+# (stripping the header line)
 
 # Find out where the hits are!
 echo "Dividing hits into regions."
@@ -22,13 +23,16 @@ bedmap --fraction-ref 0.5 --delim ';' --multidelim ';' --echo-map-id pred.temp $
 bedmap --fraction-ref 0.5 --indicator pred.temp $non_gene > non_gene.temp
 
 # Get the distance to the nearest TSS... (for all hits!) (modify the master)
-wc -l pred.temp
-wc -l gene_starts.temp
 bedtools closest -D "a" -a pred.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-1), $NF }' > dist.pre.temp
-wc -l dist.temp
+python post_bedtools_join_closest.py
+# (creates dist.temp)
 
 echo "Combining!"
-paste pred.temp TSS.temp gb.temp non_gene.temp dist.temp | gzip -c > $predfile.ehhh
+paste pred.temp TSS.temp gb.temp non_gene.temp dist.temp > comb.temp
+gunzip -c $predfile | head -1 | awk '{ print $0, "TSS","gene_body","non_gene","closest_gene","distance" }' > headerfile.temp
+cat headerfile.temp comb.temp | gzip -c > $predfile.ehhh
+
+# Header line
 
 echo "Tidying up!"
-#rm -v *.temp
+rm -v *.temp
