@@ -14,10 +14,7 @@ for line in distances_file:
     gene=line.split()[1]
     if ID==current_ID:
         gene_buffer.append(gene)
-        print ID,current_ID,gene_buffer
     else:
-        print ID, current_ID
-        print gene_buffer
         buffered_line=current_ID+'\t'+';'.join(gene_buffer)+'\t'+distance_buffer+'\n'
         outfile.write(buffered_line)
         gene_buffer=[gene]
