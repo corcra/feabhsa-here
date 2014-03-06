@@ -1,8 +1,9 @@
 # Makes histograms: region sizes, distance to TSS, dREG scores
 library(ggplot2)
 library(grid)
-args<-commandArgs(TRUE)
-datapath<-args[1]
+#args<-commandArgs(TRUE)
+#datapath<-args[1]
+datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
 data<-read.table(datapath,header=T)
 n<-nrow(data)
 
@@ -25,7 +26,12 @@ regions<-factor(regions,c("TSS","gene_body","non_gene"))
 data<-cbind(data,regions)
 region_cols<-c("firebrick1","orange1","turquoise3","gray")
 
-# Expand regions
+# First appearances
+first_appearance<-time_points[apply(data[,time_points],1,function(x) which(x==1)[1])]
+first_appearance<-factor(first_appearance,time_points)
+data<-cbind(data,first_appearance)
+
+# Expand regions - this is a giant dataframe with duplicated entries whenever regions appear in multiple timepoints - the purpose is to be able to simultaneously plot not just new points but all points at a time, acces times via 'when'
 data_exp<-data.frame()
 for (time in time_points){
     time_data<-data[data[,time]==1,-which(names(data)%in%time_points)]
@@ -34,16 +40,27 @@ for (time in time_points){
     t_d<-data.frame(time_data,when)
     data_exp<-rbind(data_exp,t_d)
 }
-print(names(data_exp))
 
-
-# First appearances
-first_appearance<-time_points[apply(data[,time_points],1,function(x) which(x==1)[1])]
-first_appearance<-factor(first_appearance,time_points)
-data<-cbind(data,first_appearance)
+# When do the regions first appear? (note, they may disappear and reappear - this takes very first appearance)
 cat("visualisation.r: First appearance of regions!\n")
-ggplot(data,aes(x=first_appearance,fill=regions))+geom_bar(position="dodge")+scale_fill_manual(values=region_cols)+mytheme
+ggplot(data,aes(x=first_appearance,fill=regions))+geom_bar(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions)
 ggsave("first_appearance.pdf",width=10)
+# What fraction of the regions appear for the first time at this timepoint?
+new_bool<-data_exp$when==data_exp$first_appearance
+new<-ifelse(new_bool,ifelse(data_exp$regions=="TSS", "new (TSS)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),"old")
+new<-factor(new,c("new (TSS)","new (gene body)","old (gene body)","old"))
+new_cols<-c(region_cols[1:3],"grey90")
+data_new<-cbind(data_exp,new)
+ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="fill")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Fraction of regions which are new at this timepoint")+xlab("Timepoint")
+ggsave("fraction_new.pdf",width=10)
+
+new<-ifelse(new_bool,ifelse(data_exp$regions=="TSS", "new (TSS)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),ifelse(data_exp$regions=="TSS", "old (TSS)", ifelse(data_exp$regions=="gene_body", "old (gene body)","old (non gene)")))
+new<-factor(new,c("new (TSS)","old (TSS)","new (gene body)","old (gene body)", "new (non gene)", "old (non gene)"))
+data_new<-cbind(data_exp,new)
+new_cols<-c(region_cols[1],"firebrick4",region_cols[2],"orange3",region_cols[3],"turquoise4")
+ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="dodge")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Number of regions  at this timepoint")+xlab("Timepoint")
+ggsave("total_regions.pdf",width=10)
+browser()
 
 # Region sizes
 cat("visualisation.r: Region sizes!\n")
@@ -65,14 +82,16 @@ ggsave("all_inflation.pdf")
 
 # Distance to closest TSS
 cat("visualisation.r: Distance to closest TSS!\n")
-distance<-data$distance
-dist_dat_pre<-data.frame(distance,regions,first_appearance)
+distance<-data_exp$distance
+regions<-data_exp$regions
+when<-data_exp$when
+dist_dat_pre<-data.frame(distance,regions,when)
 dist_dat<-dist_dat_pre[dist_dat_pre$regions!="TSS",]
-affected<-dist_dat$distance<time_thresh[dist_dat$first_appearance]
+affected<-dist_dat$distance<time_thresh[dist_dat$when]
 thresh<-ifelse(affected,"area cleared by FP treatment",ifelse(dist_dat$regions=="gene_body","unaffected (gene body)","unaffected (non gene)"))
 thresh_cols<-c("darkorchid1",region_cols[2],region_cols[3])
 dist_dat<-cbind(dist_dat,thresh)
-ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest TSS (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(first_appearance~regions,margins=FALSE,scale="free")+xlim(0,25000)
+ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest TSS (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(0,25000)
 ggsave("region_distance.pdf",width=10)
 ggplot(dist_dat,aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance to closest TSS (either direction) (gene body and non-gene)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
 ggsave("all_distance.pdf",width=10)
