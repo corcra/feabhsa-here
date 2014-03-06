@@ -23,7 +23,7 @@ n=0
 master=gzip.open(base+'dREG_regions.bed.gz','r')
 new_master=gzip.open(base+'dREG_regions_uniq.bed.gz','w')
 
-header='chr\tstart\tend\tdREG_id\t'+'\t'.join(times)+'\tinflation'+'\n'
+header='chr\tstart\tend\tdREG_id\t'+'\t'.join(times)+'\tinflation\twhen_smallest'+'\n'
 new_master.write(header)
 for line in master:
     time_pattern=[]
