@@ -153,6 +153,13 @@ ggsave("all_distance.pdf",width=10)
 #qplot(scores,data=score_dat,geom="histogram",fill=thresh)+theme_bw()
 #ggsave(paste(folder,name,".dREG_scores.pdf",sep=""))
 
+# Gene-focused analysis
+gene_only_hits<-read.table('/Users/stephanie/ll/data/genes/lists/dREG_IDs_onlybody.txt')
+data_geneonly<-data.frame(regions,howmany,first_appearance)
+data_geneonly<-data_geneonly[data$"dREG_id"%in%gene_only_hits[,1],]
+ggplot(data_geneonly,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("When do the hits inside gene bodies (only) occur?")+xlab("Timepoint")+facet_grid(~regions,margins=TRUE)
+ggsave("gene_only_when.pdf",width=10)
+
 #  Histone modifications! (have to make long form)
 counts_per_region<-function(start,stop,counts,norm){
     size<-stop-start
@@ -178,3 +185,4 @@ names(mod_dat)<-c("dREG_id","mods","counts","regions","first_appearance")
 print(mod_dat[which(mod_dat$counts==max(mod_dat[mod_dat$mods=="H3K4me1",]$counts)),]$dREG_id)
 ggplot(mod_dat,aes(x=mods,y=counts,colour=mods,group=mods))+geom_boxplot(notch=TRUE)+facet_grid(~.regions)+scale_y_log10()+mytheme+ylab("Histone marks per base (per million read) : log10")+xlab("Marks and genomic regions")
 ggsave("histone_regions.pdf")
+
