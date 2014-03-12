@@ -47,4 +47,4 @@ gunzip -c $predfile | head -1 | awk '{ print $0, "TSS","gene_body","non_gene","c
 cat headerfile.temp comb.temp | gzip -c > ${predfile/_uniq/_marked}
 
 echo "Tidying up!"
-rm -v *.temp
+#rm -v *.temp
