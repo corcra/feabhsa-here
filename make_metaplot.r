@@ -1,6 +1,21 @@
 # Use Andre's bigWig to make a metaplot!
 # bedfile: regions we want to get the metaplot around
 # bw files: plus and minus signal files (e.g. chipseq, groseq, etc.)
+get_rd<-function(datatype,datatime){
+    if (datatype=="FP"){
+        rds<-list("2min"=35290786,"5min"=38460495,"12.5min"=38534246,"25min"=38534246,"50min"=29422671)
+    } else if(datatype=="TRP"){
+        rds<-list("12.5min"=14299837,"25min"=8798933,"50min"=4463951)
+    } else if(datatype=="controls"){
+        rds<-list("untreated"=43409559,"DMSO"=18091023)
+    } else{
+        print("what crazy datatype did you give me?")
+        print(datatype)
+        quit("no")
+    }
+    cat(paste("Read depth for",datatype,"and",datatime,"is",rds[datatime],"\n"))
+    return(rds[datatime])
+}
 
 library(bigWig)
 library(ggplot2)
@@ -14,7 +29,10 @@ bedfilepath<-args[1]
 
 datatype<-args[2]
 datatime<-args[3]
-filename<-args[4]
+read_depth<-as.numeric(get_rd(datatype,datatime))
+
+titleinfo<-args[4]
+filename<-paste0(datatype,"_",datatime,"_",titleinfo)
 
 bw_plus<-paste0(bw_path,datatype,'/V6.5_',datatime,ifelse(datatype=="controls","",datatype),'_Plus.bw')
 bw_minus<-paste0(bw_path,datatype,'/V6.5_',datatime,ifelse(datatype=="controls","",datatype),'_Minus.bw')
@@ -32,22 +50,24 @@ bedfile<-read.table(bedfilepath)
 # in the event that bedfile has no strand information, we should be ignoring the second bw argument in either of these... 
 cat("make_metaplot.r: plus strand!\n")
 result_plus<-meta.subsample(bedfile,plus,minus,halfWindow=hw,step=stepp)
+r_p<-meta.normalize(result_plus,1/read_depth)
 cat("make_metaplot.r: minus strand!\n")
 result_minus<-meta.subsample(bedfile,minus,plus,halfWindow=hw,step=stepp)
+r_m<-meta.normalize(result_minus,1/read_depth)
 
 # prepare for plotting
-p<-colMeans(result_plus[[1]])
-m<-(-1)*colMeans(result_minus[[1]])
+p<-colMeans(r_p[[1]])
+m<-(-1)*colMeans(r_m[[1]])
 col<-rep(c(TRUE,FALSE),each=length(p))
 lv<-c(p,m)
-uq_p<-rep(result_plus[[2]],2)
-uq_m<-rep((-1)*result_minus[[2]],2)
-lq_p<-rep(result_plus[[3]],2)
-lq_m<-rep((-1)*result_minus[[3]],2)
+uq_p<-rep(r_p[[2]],2)
+uq_m<-rep((-1)*r_m[[2]],2)
+lq_p<-rep(r_p[[3]],2)
+lq_m<-rep((-1)*r_m[[3]],2)
 d<-rep(seq(-length(p)/2,length(p)/2-1))
 dl<-data.frame(d,lv,col,uq_p,uq_m,lq_p,lq_m)
 write.table(dl,row.names=F,col.names=T,quote=F,file=paste0(filename,".txt"))
 
 cat("make_metaplot.r: data constructed! Ready to plot.\n")
-ggplot(dl,aes(x=d,y=lv,colour=col))+geom_point(cex=0.5,show_guide=FALSE)+mytheme+xlab("Distance to centre (bp)")+ylab("Average GRO-seq signal")+ggtitle(paste0("Metagene plot (",datatype,", ",datatime,")"))+scale_colour_manual(values=c("blue","red"))+geom_ribbon(aes(ymin=lq_p,ymax=uq_p),alpha=0.5,fill="red",colour=NA)+geom_ribbon(aes(ymin=lq_m,ymax=uq_m),alpha=0.5,fill="blue",colour=NA)+geom_line(y=0,linetype="dashed",show_guide=FALSE,colour="black")
+ggplot(dl,aes(x=d,y=lv,colour=col))+geom_point(cex=0.5,show_guide=FALSE)+mytheme+xlab("Distance to centre (bp)")+ylab("Average GRO-seq signal")+ggtitle(paste0("Metagene plot (",datatype,", ",datatime,") ",titleinfo))+scale_colour_manual(values=c("blue","red"))+geom_ribbon(aes(ymin=lq_p,ymax=uq_p),alpha=0.5,fill="red",colour=NA)+geom_ribbon(aes(ymin=lq_m,ymax=uq_m),alpha=0.5,fill="blue",colour=NA)+geom_line(y=0,linetype="dashed",show_guide=FALSE,colour="black")+ylim(-0.06/1e08,0.06/1e08)
 ggsave(paste0(filename,".pdf"))
