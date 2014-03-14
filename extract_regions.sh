@@ -2,7 +2,7 @@
 # Generate appropriate bed files to use with the metaplotting...
 #
 master=/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz
-folder=/Users/stephanie/ll/results/FP
+folder=/Users/stephanie/ll/results/FP/metaplot
 
 gunzip -c $master > m.temp
 
