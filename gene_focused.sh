@@ -20,7 +20,7 @@ mv $geneanalysis/gene_list_with_overlaps_tidy.bed $geneanalysis/gene_list_with_o
 # ggsave("pdfs/hits_inbody.pdf")
 #
 
-# get the genes with no hits at TSS
+# get the genes with no hits at gene_start
 awk '{ if ($7==0) print $0 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/genes_no_hits.bed
 awk '{ if (($7>0)&&($8==0)) print $0 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/genes_only_body_hits.bed
 awk '{ print $10 }' $geneanalysis/genes_only_body_hits.bed | tr ';' '\n' > $geneanalysis/dREG_IDs_onlybody.txt
