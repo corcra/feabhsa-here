@@ -3,11 +3,11 @@
 # bw files: plus and minus signal files (e.g. chipseq, groseq, etc.)
 get_rd<-function(datatype,datatime){
     if (datatype=="FP"){
-        rds<-list("2min"=35290786,"5min"=38460495,"12.5min"=38534246,"25min"=38534246,"50min"=29422671)
+        rds<-list("2min"=35290786/3528924,"5min"=37460495/3740931,"12.5min"=38534246/4854250,"25min"=33348710/5599230,"50min"=29422671/4845825)
     } else if(datatype=="TRP"){
-        rds<-list("12.5min"=14299837,"25min"=8798933,"50min"=4463951)
+        rds<-list("12.5min"=14299837/696930,"25min"=8798933/805210,"50min"=4463951/558215)
     } else if(datatype=="controls"){
-        rds<-list("untreated"=43409559,"DMSO"=18091023)
+        rds<-list("untreated"=43409559/4341312,"DMSO"=18091023/613884)
     } else{
         print("what crazy datatype did you give me?")
         print(datatype)
@@ -75,6 +75,6 @@ if (file.exists(paste0(filename,".txt"))){
 }
 
 cat("make_metaplot.r: data constructed! Ready to plot.\n")
-ggplot(dl,aes(x=d,y=lv,colour=col))+geom_point(cex=0.5,show_guide=FALSE)+mytheme+xlab("Distance to centre (bp)")+ylab("Average GRO-seq signal")+ggtitle(paste0("Metagene plot (",datatype,", ",datatime,", ",titleinfo,")"))+scale_colour_manual(values=c("blue","red"))+geom_ribbon(aes(ymin=lq_p,ymax=uq_p),alpha=0.5,fill="red",colour=NA)+geom_ribbon(aes(ymin=lq_m,ymax=uq_m),alpha=0.5,fill="blue",colour=NA)+geom_line(y=0,linetype="dashed",show_guide=FALSE,colour="black")+ylim(-1.4e-09,1.9e-09)
+ggplot(dl,aes(x=d,y=lv,colour=col))+geom_point(cex=0.5,show_guide=FALSE)+mytheme+xlab("Distance to centre (bp)")+ylab("Average normalised GRO-seq signal")+ggtitle(paste0("Metagene plot (",datatype,", ",datatime,", ",titleinfo,")"))+scale_colour_manual(values=c("blue","red"))+geom_ribbon(aes(ymin=lq_p,ymax=uq_p),alpha=0.5,fill="red",colour=NA)+geom_ribbon(aes(ymin=lq_m,ymax=uq_m),alpha=0.5,fill="blue",colour=NA)+geom_line(y=0,linetype="dashed",show_guide=FALSE,colour="black")+ylim(-0.01,0.01)
 cat(paste0("Saving to ",filename,".pdf"),"\n")
 ggsave(paste0(filename,".pdf"))

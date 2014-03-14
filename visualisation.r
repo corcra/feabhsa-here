@@ -3,9 +3,9 @@ library(ggplot2)
 library(grid)
 source('vis_fns.r')
 
-#args<-commandArgs(TRUE)
-#datapath<-args[1]
-datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
+args<-commandArgs(TRUE)
+datapath<-args[1]
+#datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
 data<-read.table(datapath,header=T)
 n<-nrow(data)
 

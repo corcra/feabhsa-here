@@ -47,6 +47,3 @@ cat headerfile.temp comb.temp | gzip -c > ${predfile/_uniq/_marked}
 
 echo "Tidying up!"
 #rm -v *.temp
-
-# misc code fragments
-#bedtools closest -D "a" -a pred.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-1), $NF }' > dist.pre.temp
