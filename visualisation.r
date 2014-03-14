@@ -1,4 +1,4 @@
-# Makes histograms: region sizes, distance to TSS, dREG scores
+# Makes histograms: region sizes, distance to gene_start, dREG scores
 library(ggplot2)
 library(grid)
 source('vis_fns.r')
@@ -22,13 +22,13 @@ norms<-list("H3K4me1"=4935147/1e06,"H3K4me3"=8046120/1e06,"H3K27ac"=21839696/1e0
 mytheme<-theme(plot.margin=unit(c(2,2,2,2),"cm"),axis.title.x=element_text(vjust=-0.2),axis.title.y=element_text(angle=90,vjust=0.2),plot.title=element_text(size=15,vjust=1.4))+theme_bw()
 
 #Quick check: how many multiply-assigned regions do we have?
-double_regions<-sum((data$TSS+1*(data$gene_body!=0)+data$non_gene)==2)
-triple_regions<-sum((data$TSS+1*(data$gene_body!=0)+data$non_gene)==3)
+double_regions<-sum((data$gene_start+1*(data$gene_body!=0)+data$non_gene)==2)
+triple_regions<-sum((data$gene_start+1*(data$gene_body!=0)+data$non_gene)==3)
 cat("visualisation.r: There are",double_regions,"doubly-assigned and",triple_regions,"triply-assigned regions.\n")
 
 # Condense regions
-regions<-ifelse(data$TSS==1,"TSS",ifelse(data$gene_body!=0,"gene_body","non_gene"))
-regions<-factor(regions,c("TSS","gene_body","non_gene"))
+regions<-ifelse(data$gene_start==1,"gene_start",ifelse(data$gene_body!=0,"gene_body","non_gene"))
+regions<-factor(regions,c("gene_start","gene_body","non_gene"))
 data<-cbind(data,regions)
 region_cols<-c("firebrick1","orange1","turquoise3","gray")
 
@@ -94,15 +94,15 @@ ggplot(data,aes(x=first_appearance,fill=regions))+geom_bar(position="dodge")+sca
 ggsave("pdfs/first_appearance.pdf",width=10)
 # What fraction of the regions appear for the first time at this timepoint?
 new_bool<-data_exp$when==data_exp$first_appearance
-new<-ifelse(new_bool,ifelse(data_exp$regions=="TSS", "new (TSS)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),"old")
-new<-factor(new,c("new (TSS)","new (gene body)","new (non gene)","old"))
+new<-ifelse(new_bool,ifelse(data_exp$regions=="gene_start", "new (gene_start)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),"old")
+new<-factor(new,c("new (gene_start)","new (gene body)","new (non gene)","old"))
 new_cols<-c(region_cols[1:3],"grey90")
 data_new<-cbind(data_exp,new)
 ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="fill")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Fraction of regions which are new at this timepoint")+xlab("Timepoint")+ggtitle("Does time after flavopiridol treatment aid discovery of intragenic regions?")
 ggsave("pdfs/fraction_new.pdf",width=10)
 
-new<-ifelse(new_bool,ifelse(data_exp$regions=="TSS", "new (TSS)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),ifelse(data_exp$regions=="TSS", "old (TSS)", ifelse(data_exp$regions=="gene_body", "old (gene body)","old (non gene)")))
-new<-factor(new,c("new (TSS)","old (TSS)","new (gene body)","old (gene body)", "new (non gene)", "old (non gene)"))
+new<-ifelse(new_bool,ifelse(data_exp$regions=="gene_start", "new (gene_start)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),ifelse(data_exp$regions=="gene_start", "old (gene_start)", ifelse(data_exp$regions=="gene_body", "old (gene body)","old (non gene)")))
+new<-factor(new,c("new (gene_start)","old (gene_start)","new (gene body)","old (gene body)", "new (non gene)", "old (non gene)"))
 data_new<-cbind(data_exp,new)
 new_cols<-c(region_cols[1],"firebrick4",region_cols[2],"orange3",region_cols[3],"turquoise4")
 ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="dodge")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Number of regions  at this timepoint")+xlab("Timepoint")
@@ -126,21 +126,21 @@ ggsave("pdfs/region_inflation.pdf",width=10)
 ggplot(inf_dat,aes(x=inflation))+geom_histogram(binwidth=0.5,fill="gray")+mytheme+ggtitle("Ratio by which smallest contributing region was embiggened (all)")+xlab("Inflation factor")+ylab("Counts")+xlim(0,20)
 ggsave("pdfs/all_inflation.pdf")
 
-# Distance to closest TSS
-cat("visualisation.r: Distance to closest TSS!\n")
+# Distance to closest gene_start
+cat("visualisation.r: Distance to closest gene_start!\n")
 distance<-data_exp$distance
 regions_exp<-data_exp$regions
 when<-data_exp$when
 dist_dat_pre<-data.frame(distance,regions_exp,when)
-dist_dat<-dist_dat_pre[dist_dat_pre$regions_exp!="TSS",]
+dist_dat<-dist_dat_pre[dist_dat_pre$regions_exp!="gene_start",]
 affected<-dist_dat$distance<time_thresh[dist_dat$when]
 thresh<-ifelse(affected,"area cleared by FP treatment",ifelse(dist_dat$regions_exp=="gene_body","unaffected (gene body)","unaffected (non gene)"))
 thresh_cols<-c("darkorchid1",region_cols[2],region_cols[3])
 dist_dat<-cbind(dist_dat,thresh)
 names(dist_dat)<-c("distance","regions","when","thresh")
-ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest TSS (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(0,25000)
+ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(0,25000)
 ggsave("pdfs/region_distance.pdf",width=10)
-ggplot(dist_dat,aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance to closest TSS (either direction) (gene body and non-gene)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
+ggplot(dist_dat,aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance to closest gene_start (either direction) (gene body and non-gene)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
 ggsave("pdfs/all_distance.pdf",width=10)
 
 # dREG scores
