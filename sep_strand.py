@@ -12,7 +12,7 @@ minusfile = open(filename+'.minus','w')
 
 i=0
 for line in open(filename,'r'):
-    if i%5000==0:
+    if i%1000000==0:
         print i
     i = i+1
     strand = line.split()[5]
