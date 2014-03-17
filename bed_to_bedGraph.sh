@@ -32,12 +32,12 @@ do
 #    awk '{ print $1, $2, $3, $4/$n_minus }' minus.bedGraph > minus.norm
 
     echo "Combining strands and sorting!"
-    cat plus.norm minus.norm | sort-bed - > ${f/.bed/.bedGraph}
+    cat plus.bedGraph minus.bedGraph| sort-bed - > ${f/.bed/.bedGraph}
 
     echo "Tidying!"
-    rm -v plus.bedGraph
-    rm -v minus.bedGraph
-    rm -v plus.norm
-    rm -v minus.norm
+#    rm -v plus.bedGraph
+#    rm -v minus.bedGraph
+#    rm -v plus.norm
+#    rm -v minus.norm
 
 done
