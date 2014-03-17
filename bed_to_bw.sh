@@ -18,8 +18,8 @@ do
     /Users/stephanie/Tools/UCSC/bedItemOverlapCount -chromSize=$mm9 mm9 $minus > ${f/.bed/.minus.bedGraph}
 
     echo "Converting to bigWig!"
-    /Users/stephanie/Tools/UCSC/bedGraphToBigWig plus.bedGraph $mm9 ${f/.bed/.bw}
-    /Users/stephanie/Tools/UCSC/bedGraphToBigWig minus.bedGraph $mm9 ${f/.bed/.bw}
+    /Users/stephanie/Tools/UCSC/bedGraphToBigWig ${f/.bed/.plus.bedGraph} $mm9 ${f/.bed/.plus.bw}
+    /Users/stephanie/Tools/UCSC/bedGraphToBigWig ${f/.bed/.minus.bedGraph} $mm9 ${f/.bed/.minus.bw}
 
     echo "Compressing!"
     gzip -v *.bedGraph
