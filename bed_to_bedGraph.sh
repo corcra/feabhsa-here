@@ -1,8 +1,7 @@
-#!/bin/bash
+#/bin/bash
 # Converts a bed to a bedGraph, 
 # THEN NORMALISES BY READ COUNT (not really!)
 
-#mm9=/home/macproadmin/users/Stephanie/data/mm9.chromSizes
 mm9=/Users/stephanie/ll/data/mm9.chromSizes
 
 for f in *.bed
@@ -35,9 +34,9 @@ do
     cat plus.bedGraph minus.bedGraph| sort-bed - > ${f/.bed/.bedGraph}
 
     echo "Tidying!"
-#    rm -v plus.bedGraph
-#    rm -v minus.bedGraph
-#    rm -v plus.norm
-#    rm -v minus.norm
+    rm -v plus.bedGraph
+    rm -v minus.bedGraph
+    rm -v plus.norm
+    rm -v minus.norm
 
 done
