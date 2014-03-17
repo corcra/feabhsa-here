@@ -9,7 +9,7 @@ for f in *.bed
 do
     echo $f
     echo "Separating strands."
-    python ~/Projects/misc-scripts/sep_strand.py $f
+    python ~/Projects/feabhsa-here/sep_strand.py $f
 
     echo "Getting read depth."
     plus=$f.plus
@@ -24,8 +24,8 @@ do
     read -p "Press [Enter] key to continue..."
 
     echo "Converting to bedGraph!"
-    ./bedItemOverlapCount -chromSize=$mm9 mm9 $plus > plus.bedGraph
-    ./bedItemOverlapCount -chromSize=$mm9 mm9 $minus > minus.bedGraph
+    /Users/stephanie/Tools/UCSC/bedItemOverlapCount -chromSize=$mm9 mm9 $plus > plus.bedGraph
+    /Users/stephanie/Tools/UCSC/bedItemOverlapCount -chromSize=$mm9 mm9 $minus > minus.bedGraph
 
 #    echo "Normalising by total reads!"
 #    awk '{ print $1, $2, $3, $4/$n_plus }' plus.bedGraph > plus.norm
