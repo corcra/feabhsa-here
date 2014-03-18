@@ -19,5 +19,5 @@ for chro in chro_list:
     chro_end=chro_sizes[chro]
     # windows is a list of the end of the windows (for this chromosome)
     for window_start in range(0,chro_end,window_size):
-        fl=chro+'\t'+str(window_start)+'\t'+str(window_start+window_size)+'\n'
+        fl=chro+'\t'+str(window_start)+'\t'+str(window_start+window_size)+'\t'+'fake'+'\n'
         fakefile.write(fl)
