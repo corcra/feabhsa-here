@@ -1,6 +1,8 @@
 # Use Andre's bigWig to make a metaplot!
 # bedfile: regions we want to get the metaplot around
 # bw files: plus and minus signal files (e.g. chipseq, groseq, etc.)
+#
+# note: here we are doing appropriate normalisation using a spikein (the denominators)
 get_rd<-function(datatype,datatime){
     if (datatype=="FP"){
         rds<-list("2min"=35290786/3528924,"5min"=37460495/3740931,"12.5min"=38534246/4854250,"25min"=33348710/5599230,"50min"=29422671/4845825)
@@ -8,7 +10,9 @@ get_rd<-function(datatype,datatime){
         rds<-list("12.5min"=14299837/696930,"25min"=8798933/805210,"50min"=4463951/558215)
     } else if(datatype=="controls"){
         rds<-list("untreated"=43409559/4341312,"DMSO"=18091023/613884)
-    } else{
+    } else if(datatype=="ChIPseq"){
+        rds<-list("H3K4me1"=1,"H3K4me3"=1,"H3K27ac"=1)
+    }else{
         print("what crazy datatype did you give me?")
         print(datatype)
         quit("no")
@@ -28,6 +32,11 @@ args<-commandArgs(TRUE)
 bedfilepath<-args[1]
 
 datatype<-args[2]
+if(datatype=="ChIPseq"){
+    bothstrands<-FALSE
+} else{
+    bothstrands<-TRUE
+}
 datatime<-args[3]
 read_depth<-as.numeric(get_rd(datatype,datatime))
 
