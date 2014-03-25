@@ -26,8 +26,7 @@ for line in bedmap_mess:
     outfile.write(newline+'\n')
     if not sum(nGene_start) + sum(nBody) +sum(nOutside)== totalcounts:
   #      print 'huh?', nGene_start, nBody, totalcounts, line
-        print i
-        i=i+1
-#        errorfile.write(newline+'\t'+'-'.join(map(str,nGene_start))+'\t'+'-'.join(map(str,nBody))+'\t'+'-'.join(map(str,nOutside))+'\n')
+#        print i
+#        i=i+1
         errorfile.write(newline+'\t'+'-'.join(map(str,nOutside))+'\n')
 #        sys.exit()
