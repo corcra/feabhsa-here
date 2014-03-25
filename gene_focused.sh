@@ -24,5 +24,6 @@ mv $geneanalysis/gene_list_with_overlaps_tidy.bed $geneanalysis/gene_list_with_o
 awk '{ if ($7==0) print $0 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/genes_no_hits.bed
 awk '{ if (($7>0)&&($8==0)) print $0 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/genes_only_body_hits.bed
 awk '{ print $10 }' $geneanalysis/genes_only_body_hits.bed | tr ';' '\n' > $geneanalysis/dREG_IDs_onlybody.txt
-awk '{ if ($9>0) print $4 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/gene_IDs_bodyhit.txt
+echo -e 'ID\tstart\tbody' > $geneanalysis/gene_IDs_bodyhit.txt
+awk 'BEGIN{OFS="\t"}{ if ($9>0) print $4,$8,$9 }' $geneanalysis/gene_list_with_overlaps.bed >> $geneanalysis/gene_IDs_bodyhit.txt
 # (use this in the visualisation script! when are these guys discovered?)
