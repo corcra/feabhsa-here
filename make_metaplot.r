@@ -1,4 +1,4 @@
-# Use Andre's bigWig to make a metaplot!
+# Use Andres bigWig to make a metaplot!
 # bedfile: regions we want to get the metaplot around
 # bw files: plus and minus signal files (e.g. chipseq, groseq, etc.)
 #
