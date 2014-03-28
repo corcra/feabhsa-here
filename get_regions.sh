@@ -13,9 +13,9 @@ non_gene=$data/genes/non_genes.bed
 awk 'BEGIN{OFS="\t"}{ if ($6=="+") { print $1, $2, $2+1, $4, $6 } else { print $1, $3-1, $3, $4, $6 } }' $gene_list > gene_starts.temp
 
 # Markers (note using bedGraphs)
-H3K4me1=$data/ChIPseq/bedgraphs/H3K4me1_Meiss.sorted.bedGraph
-H3K4me3=$data/ChIPseq/bedgraphs/H3K4me3_Marson.sorted.bedGraph
-H3K27ac=$data/ChIPseq/bedgraphs/H3K27Ac.sorted.bedGraph
+H3K4me1=$data/ChIPseq/bedgraphs/H3K4me1_Meiss.sorted.bedGraph.gz
+H3K4me3=$data/ChIPseq/bedgraphs/H3K4me3_Marson.sorted.bedGraph.gz
+H3K27ac=$data/ChIPseq/bedgraphs/H3K27Ac.sorted.bedGraph.gz
 
 # You know what, just give me the whole path.
 predfile=$1
@@ -36,9 +36,9 @@ python post_bedtools_join_closest.py
 
 # Get histone counts! (totally unnormalised here...)
 echo "Getting histone counts."
-bedmap --delim '\t' --range 500 --sum pred.temp $H3K4me1 > H3K4me1.temp
-bedmap --delim '\t' --range 500 --sum pred.temp $H3K4me3 > H3K4me3.temp
-bedmap --delim '\t' --range 500 --sum pred.temp $H3K27ac > H3k27ac.temp
+gunzip -c $H3K4me1 | bedmap --delim '\t' --range 500 --sum pred.temp - > H3K4me1.temp
+gunzip -c $H3K4me3 | bedmap --delim '\t' --range 500 --sum pred.temp - > H3K4me3.temp
+gunzip -c $H3K27ac | bedmap --delim '\t' --range 500 --sum pred.temp - > H3k27ac.temp
 
 echo "Combining!"
 paste pred.temp gene_start.temp gb.temp non_gene.temp dist.temp H3K4me1.temp H3K4me3.temp H3K27ac.temp > comb.temp
