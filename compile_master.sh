@@ -35,10 +35,10 @@ then
 else
     # Adds regions to existing list (assume same if ANY overlap between sets)
     echo "Updating master list."
-    gunzip -c $idlist | bedmap --delim '|' --echo --indicator $pos.temp - > new_or_old.temp
+    gunzip -c $idlist | bedmap --delim '|' --multidelim '|' --echo --indicator $pos.temp - > new_or_old.temp
     awk 'BEGIN{FS="|"}{ if ($2==0) print $1 }' new_or_old.temp > new.temp
     awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' new_or_old.temp > old.temp
-    gunzip -c $idlist | bedmap --delim '|' --echo --echo-map - old.temp  > idlist.temp
+    gunzip -c $idlist | bedmap --delim '|' --multidelim '|' --echo --echo-map - old.temp  > idlist.temp
     cat idlist.temp new.temp | sort-bed - > idlist_updated.temp
     gzip -c idlist_updated.temp > $idlist
 fi
@@ -46,4 +46,4 @@ fi
 # Tidy up
 gzip -c $pos.temp > $pos
 echo "Deleting files."
-rm -v *.temp
+#rm -v *.temp
