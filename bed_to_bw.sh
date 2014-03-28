@@ -1,7 +1,6 @@
 #!/bin/bash
 # Convert bed files to bigwig - separating strands, of course!
 
-FILES=K562_unt.subsamp10pct.bed.gz
 mm9=/Users/stephanie/ll/data/mm9.chromSizes
 
 for f in *.bed
