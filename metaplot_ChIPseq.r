@@ -3,7 +3,7 @@ library(grid)
 library(bigWig)
 
 preprocess<-TRUE
-norm<-TRUE
+norm<-FALSE
 if(norm==TRUE){
     print("Using normalised data!")
     normstring<-'.window250norm'
@@ -86,13 +86,24 @@ if(!preprocess){
     write.table(H3K27ac_data,row.names=F,col.names=T,quote=F,file=paste0("H3K27ac_metaplot",normstring,".txt"))
     plot_metaplot(H3K27ac_data,"H3K27ac")
 
-#    cat("H3!\n")
-#    H3<-load.bigWig('/Users/stephanie/ll/data/ChIPseq/bw/H3_align.sorted.bw')
-#    gs_dat<-get_metaplot(gene_start,H3,hw,stepp,"gene_start")
-#    gb_dat<-get_metaplot(gene_body,H3,hw,stepp,"gene_body")
-#    ng_dat<-get_metaplot(non_gene,H3,hw,stepp,"non_gene")
-#    H3_data<-rbind(gs_dat,gb_dat,ng_dat)
-#    H3_data$region_name<-factor(H3_data$region_name,c("gene_start","gene_body","non_gene"))
-#    write.table(H3_data,row.names=F,col.names=T,quote=F,file="H3_metaplot.txt")
+    cat("H3!\n")
+    H3<-load.bigWig('/Users/stephanie/ll/data/ChIPseq/bw/H3_align.sorted.bw')
+    gs_dat<-get_metaplot(gene_start,H3,hw,stepp,"gene_start")
+    gb_dat<-get_metaplot(gene_body,H3,hw,stepp,"gene_body")
+    ng_dat<-get_metaplot(non_gene,H3,hw,stepp,"non_gene")
+    H3_data<-rbind(gs_dat,gb_dat,ng_dat)
+    H3_data$region_name<-factor(H3_data$region_name,c("gene_start","gene_body","non_gene"))
+    write.table(H3_data,row.names=F,col.names=T,quote=F,file="H3_metaplot.txt")
+    plot_metaplot(H3_data,"H3")
+
+    cat("p300!\n")
+    p300<-load.bigWig('/Users/stephanie/ll/data/ChIPseq/bw/p300_fastq_align.sorted.bw')
+    gs_dat<-get_metaplot(gene_start,p300,hw,stepp,"gene_start")
+    gb_dat<-get_metaplot(gene_body,p300,hw,stepp,"gene_body")
+    ng_dat<-get_metaplot(non_gene,p300,hw,stepp,"non_gene")
+    p300_data<-rbind(gs_dat,gb_dat,ng_dat)
+    p300_data$region_name<-factor(p300_data$region_name,c("gene_start","gene_body","non_gene"))
+    write.table(p300_data,row.names=F,col.names=T,quote=F,file="p300_metaplot.txt")
+    plot_metaplot(p300_data,"p300")
 }
 
