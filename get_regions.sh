@@ -38,7 +38,7 @@ python post_bedtools_join_closest.py
 echo "Getting histone counts."
 gunzip -c $H3K4me1 | bedmap --delim '\t' --range 500 --sum pred.temp - > H3K4me1.temp
 gunzip -c $H3K4me3 | bedmap --delim '\t' --range 500 --sum pred.temp - > H3K4me3.temp
-gunzip -c $H3K27ac | bedmap --delim '\t' --range 500 --sum pred.temp - > H3k27ac.temp
+gunzip -c $H3K27ac | bedmap --delim '\t' --range 500 --sum pred.temp - > H3K27ac.temp
 
 echo "Combining!"
 paste pred.temp gene_start.temp gb.temp non_gene.temp dist.temp H3K4me1.temp H3K4me3.temp H3K27ac.temp > comb.temp
