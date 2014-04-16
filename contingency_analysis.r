@@ -1,5 +1,6 @@
 # Test for enrichment of hits in gene bodies for later FP timepoints...
 #
+time_thresh<-list("X0"=0,"X2"=0,"X5"=0,"X12.5"=7000,"X25"=30000,"X50"=100000)
 
 # Different ways of getting contingency tables
 upto_and_after<-function(data,time_points,nt,t,region){
@@ -31,6 +32,26 @@ presence<-function(data,time_points,nt,t,region){
     contingency.table<-matrix(c(yes_no,yes_yes,no_no,no_yes),2,2,byrow=TRUE)
     return(contingency.table)
 }
+
+# influenced
+influenced_by_FP<-function(data,time_points,nt,t){
+    # exclude the hits which have a distance of 0, because what even is that
+    d<-data[((data$"gene_body"!=0)&(data[,time_points[t+1]]==1)&(data$"distance"!=0)),]
+    #d<-data[((data$"gene_body"!=0)&(data[,time_points[t+1]]==1)),]
+
+    #wt_inf<-sum((d[,time_points[1]]==1)&(d$"distance"<=time_thresh[time_points[t+1]]))
+    #wt_ninf<-sum((d[,time_points[1]]==1)&(d$"distance">time_thresh[time_points[t+1]]))
+    #nwt_inf<-sum((d[,time_points[1]]==0)&(d$"distance"<=time_thresh[time_points[t+1]]))
+    #nwt_ninf<-sum((d[,time_points[1]]==0)&(d$"distance">time_thresh[time_points[t+1]]))
+    
+    wt_inf<-sum((rowSums(cbind(rep(0,nrow(d)),d[,time_points[1:t]]))!=0)&(d$"distance"<=time_thresh[time_points[t+1]]))
+    wt_ninf<-sum((rowSums(cbind(rep(0,nrow(d)),d[,time_points[1:t]]))!=0)&(d$"distance">time_thresh[time_points[t+1]]))
+    nwt_inf<-sum((rowSums(cbind(rep(0,nrow(d)),d[,time_points[1:t]]))==0)&(d$"distance"<=time_thresh[time_points[t+1]]))
+    nwt_ninf<-sum((rowSums(cbind(rep(0,nrow(d)),d[,time_points[1:t]]))==0)&(d$"distance">time_thresh[time_points[t+1]]))
+
+    contingency.table<-matrix(c(wt_inf,nwt_inf,wt_ninf,nwt_ninf),2,2,byrow=TRUE)
+    return(contingency.table)
+}
 datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
 data<-read.table(datapath,header=T)
 
@@ -39,12 +60,14 @@ nt<-length(time_points)
 gs.pvals<-list()
 gb.pvals<-list()
 ng.pvals<-list()
+fp.pvals<-list()
 gs.tables<-list()
 gb.tables<-list()
 ng.tables<-list()
+fp.tables<-list()
 for (t in seq(nt-1)){
     # test gene_start enrichment
-    gs.contingency.table<-presence(data,time_points,nt,t,"gene_start")
+    gs.contingency.table<-compare_to_baseline(data,time_points,nt,t,"gene_start")
     chisq.result<-chisq.test(gs.contingency.table)
     stat<-chisq.result$statistic
     pval<-chisq.result$p.value
@@ -54,7 +77,7 @@ for (t in seq(nt-1)){
     gs.tables[[time_points[t+1]]]<-gs.contingency.table
 
     # test gene_body enrichment
-    gb.contingency.table<-presence(data,time_points,nt,t,"gene_body")
+    gb.contingency.table<-compare_to_baseline(data,time_points,nt,t,"gene_body")
     chisq.result<-chisq.test(gb.contingency.table)
     stat<-chisq.result$statistic
     pval<-chisq.result$p.value
@@ -66,7 +89,7 @@ for (t in seq(nt-1)){
     gb.tables[[time_points[t+1]]]<-gb.contingency.table
 
     # test non_gene enrichment
-    ng.contingency.table<-presence(data,time_points,nt,t,"non_gene")
+    ng.contingency.table<-compare_to_baseline(data,time_points,nt,t,"non_gene")
     chisq.result<-chisq.test(ng.contingency.table)
     stat<-chisq.result$statistic
     pval<-chisq.result$p.value
@@ -76,4 +99,15 @@ for (t in seq(nt-1)){
     cat("p-value of association:",pval,"\n")
     ng.pvals[time_points[t+1]]<-pval
     ng.tables[[time_points[t+1]]]<-ng.contingency.table
+
+    fp.contingency.table<-influenced_by_FP(data,time_points,nt,t)
+    chisq.result<-chisq.test(fp.contingency.table)
+    stat<-chisq.result$statistic
+    pval<-chisq.result$p.value
+    cat("effects of FP?\n")
+    print(fp.contingency.table)
+    cat("Chi-sq stat:",stat,"\n")
+    cat("p-value of association:",pval,"\n")
+    fp.pvals[time_points[t+1]]<-pval
+    fp.tables[[time_points[t+1]]]<-fp.contingency.table
 }
