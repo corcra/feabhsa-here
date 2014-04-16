@@ -1,12 +1,15 @@
 # Makes histograms: region sizes, distance to gene_start, dREG scores
 library(ggplot2)
 library(grid)
+library(scales)
 source('vis_fns.r')
 
 args<-commandArgs(TRUE)
-datapath<-args[1]
-#datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
-data<-read.table(datapath,header=T)
+#datapath<-args[1]
+datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
+fakedatapath<-'/Users/stephanie/ll/results/fake/fake_marked.bed.gz'
+data<-read.table(datapath,header=T,na.strings="NAN")
+fakedata<-read.table(fakedatapath,header=T,na.strings="NAN")
 n<-nrow(data)
 
 # Timepoints (optionally from argument)
@@ -45,11 +48,6 @@ data_howfreq<-data.frame(regions,howmany,first_appearance)
 ggplot(data_howfreq,aes(x=howmany,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("How many timepoints do hits occur in?")+xlab("Number of timepoints")+facet_grid(~regions,margins=TRUE)
 ggsave("pdfs/repetition_regions.pdf",width=10)
 
-# For regions that are only seen once... when are they seen?
-cat("visualisation.r: Loner regions\n")
-data_loners<-data_howfreq[howmany_prefac==1,]
-ggplot(data_loners,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+xlab("Timepoint")+ggtitle("For regions appearing only once, when was it?")
-ggsave("pdfs/loner_regions.pdf",width=10)
 
 # How many violations? (e.g. disappearance after appearance)
 #cat("visualisation.r: violations\n")
@@ -81,12 +79,25 @@ ggsave("pdfs/earlylate_regions.pdf",width=10)
 # Expand regions - this is a giant dataframe with duplicated entries whenever regions appear in multiple timepoints - the purpose is to be able to simultaneously plot not just new points but all points at a time, acces times via 'when'
 data_exp<-data.frame()
 for (time in time_points){
-    time_data<-data[data[,time]==1,-which(names(data)%in%time_points)]
+    #time_data<-data[data[,time]==1,-which(names(data)%in%time_points)]
+    time_data<-data[data[,time]==1,]
     en<-nrow(time_data)
     when<-rep(time,en)
     t_d<-data.frame(time_data,when)
     data_exp<-rbind(data_exp,t_d)
 }
+
+# For regions that are only seen once... when are they seen?
+cat("visualisation.r: Loner regions\n")
+data_loners<-data_howfreq[howmany_prefac==1,]
+ggplot(data_loners,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+xlab("Timepoint")+ggtitle("For regions appearing only once, when was it?")
+ggsave("pdfs/loner_regions.pdf",width=10)
+
+# want basically the same graph, but each count will be normalised by the total found at that timepoint
+# so we have... 'what fraction of the hits (at this region at this time) are unique?' (e.g. never seen before/after)
+uniq_exp<-ifelse(rowSums(data_exp[,time_points])==1,TRUE,FALSE)
+du<-cbind(data_exp,uniq_exp)
+ggplot(du,aes(x=first_appearance,fill=uniq_exp,group=regions))+geom_histogram()
 
 # When do the regions first appear? (note, they may disappear and reappear - this takes very first appearance)
 cat("visualisation.r: First appearance of regions!\n")
@@ -140,6 +151,8 @@ dist_dat<-cbind(dist_dat,thresh)
 names(dist_dat)<-c("distance","regions","when","thresh")
 ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(0,25000)
 ggsave("pdfs/region_distance.pdf",width=10)
+ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(5000,100000)
+ggsave("pdfs/region_distance_5kon.pdf",width=10)
 ggplot(dist_dat,aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance to closest gene_start (either direction) (gene body and non-gene)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
 ggsave("pdfs/all_distance.pdf",width=10)
 
@@ -154,11 +167,11 @@ ggsave("pdfs/all_distance.pdf",width=10)
 #ggsave(paste(folder,name,".dREG_scores.pdf",sep=""))
 
 # Gene-focused analysis
-gene_only_hits<-read.table('/Users/stephanie/ll/data/genes/lists/dREG_IDs_onlybody.txt')
-data_geneonly<-data.frame(regions,howmany,first_appearance)
-data_geneonly<-data_geneonly[data$"dREG_id"%in%gene_only_hits[,1],]
-ggplot(data_geneonly,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("When do the hits inside gene bodies (only) occur?")+xlab("Timepoint")+facet_grid(~regions,margins=TRUE)
-ggsave("pdfs/gene_only_when.pdf",width=10)
+#gene_only_hits<-read.table('/Users/stephanie/ll/data/genes/lists/dREG_IDs_onlybody.txt')
+#data_geneonly<-data.frame(regions,howmany,first_appearance)
+#data_geneonly<-data_geneonly[data$"dREG_id"%in%gene_only_hits[,1],]
+#ggplot(data_geneonly,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("When do the hits inside gene bodies (only) occur?")+xlab("Timepoint")+facet_grid(~regions,margins=TRUE)
+#ggsave("pdfs/gene_only_when.pdf",width=10)
 
 #  Histone modifications! (have to make long form)
 counts_per_region<-function(start,stop,counts,norm){
@@ -181,8 +194,37 @@ long_IDs<-rep(data$dREG_id,n_mods)
 mod_dat<-data.frame(long_IDs,mod_names,long_counts,long_regions,long_first_appearance)
 # Remove NaNs (no mapped regions)
 mod_dat<-mod_dat[is.finite(mod_dat$long_counts),]
+# Remove that one crazy high point in the H3K4me1 data
+mod_dat<-mod_dat[mod_dat$long_counts<7,]
+# set up the names etc.
 names(mod_dat)<-c("dREG_id","mods","counts","regions","first_appearance")
-print(mod_dat[which(mod_dat$counts==max(mod_dat[mod_dat$mods=="H3K4me1",]$counts)),]$dREG_id)
-ggplot(mod_dat,aes(x=mods,y=counts,colour=mods,group=mods))+geom_boxplot(notch=TRUE)+facet_grid(~.regions)+scale_y_log10()+mytheme+ylab("Histone marks per base (per million read) : log10")+xlab("Marks and genomic regions")
-ggsave("pdfs/histone_regions.pdf")
+ggplot(mod_dat,aes(x=regions,y=counts,fill=regions))+geom_boxplot(position="dodge",notch=TRUE)+facet_wrap(~mods,scales="free_y")+mytheme+ylab("Histone marks per base (per million read) : log2")+xlab("Marks and genomic regions")+scale_fill_manual(values=c(region_cols,region_cols[4],region_cols[4]))+scale_y_continuous(trans=log2_trans(),labels=trans_format("log2",math_format(2^.x)),breaks=2**seq(-10,1))
+ggsave("pdfs/histone_regions.pdf",width=10)
 
+# now do it all again for the fake data
+fake_long_counts<-vector()
+for (mod in mods){
+    mod_norm<-as.numeric(norms[mod])
+    fake_long_counts<-c(fake_long_counts,counts_per_region(fakedata$start,fakedata$end,fakedata[,mod],mod_norm))
+}
+fake_n_mods<-length(mods)
+fake_mod_names<-rep(mods,each=nrow(fakedata))
+fake_regions<-ifelse(fakedata$gene_start==1,"gene_start",ifelse(fakedata$gene_body!=0,"gene_body","non_gene"))
+fake_regions<-factor(fake_regions,c("gene_start","gene_body","non_gene"))
+fake_long_regions<-rep(fake_regions,fake_n_mods)
+fake_first_appearance<-time_points[apply(fakedata[,time_points],1,function(x) which(x==1)[1])]
+fake_first_appearance<-factor(fake_first_appearance,time_points)
+fake_long_first_appearance<-rep(fake_first_appearance,fake_n_mods)
+fake_long_IDs<-rep(fakedata$dREG_id,fake_n_mods)
+fake_mod_dat<-data.frame(fake_long_IDs,fake_mod_names,fake_long_counts,fake_long_regions,fake_long_first_appearance)
+# Remove NaNs (no mapped regions)
+fake_mod_dat<-fake_mod_dat[is.finite(fake_mod_dat$fake_long_counts),]
+names(fake_mod_dat)<-c("dREG_id","mods","counts","regions","first_appearance")
+
+# Combinate both of these
+regions_both<-c(as.character(mod_dat$regions),paste(as.character(fake_mod_dat$regions),"(bg)"))
+regions_both<-factor(regions_both,c("gene_start","gene_body","non_gene","gene_start (bg)","gene_body (bg)","non_gene (bg)"))
+mod_both<-rbind(mod_dat,fake_mod_dat)
+mod_both<-cbind(mod_both,regions_both)
+ggplot(mod_both,aes(x=regions,y=counts,fill=regions_both))+geom_boxplot(position="dodge",notch=TRUE)+facet_wrap(~mods,scales="free_y")+mytheme+ylab("Histone marks per base (per million read) : log2")+xlab("Marks and genomic regions")+scale_fill_manual(values=c(region_cols,region_cols[4],region_cols[4]))+scale_y_continuous(trans=log2_trans(),labels=trans_format("log2",math_format(2^.x)),breaks=2**seq(-10,1))
+ggsave("pdfs/histone_regions_withbg.pdf",width=13)
