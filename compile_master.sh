@@ -5,7 +5,8 @@
 #               Adds new regions to master list.
 
 # Threshold
-THRE=0.8
+#THRE=0.8
+THRE=0.5
 
 # Inputs!
 datatype=$1     # eg FP, TRP, control
@@ -27,6 +28,13 @@ gunzip -c $preds | awk '{ print $4 }' > ${preds/.predictions.bedGraph.gz/.scores
 # Expands positive regions into window +-50, merges these.
 echo "Getting regions."
 gunzip -c $preds | awk 'BEGIN{OFS="\t"} ($4 > '"$THRE"') { print $1,$2-50,$3+51,$4 }' | sort-bed - | bedops --merge - | awk 'BEGIN{OFS="\t"}{ print $1, $2, $3, "'$datatype'_" "'${datatime/min/}'_" NR }' > $pos.temp
+
+# Create the master list, if necessary
+if ! [ -a $idlist ]
+then
+    echo "Creating master list!"
+    cp $pos.temp $idlist
+fi
 
 # Checks if this data already exists in the master list
 if gunzip -c $idlist | grep -q $datatype\_${datatime/min/}_
