@@ -12,7 +12,7 @@ gene_body=$data/genes/gene_body.bed
 non_gene=$data/genes/non_genes.bed
 awk 'BEGIN{OFS="\t"}{ if ($6=="+") { print $1, $2, $2+1, $4, $6 } else { print $1, $3-1, $3, $4, $6 } }' $gene_list > gene_starts.temp
 
-# Markers (note using bedGraphs)
+# Markers
 H3K4me1=$data/ChIPseq/H3K4me1_Meiss.sorted.bed.gz
 H3K4me3=$data/ChIPseq/H3K4me3_Marson.sorted.bed.gz
 H3K27ac=$data/ChIPseq/H3K27Ac.sorted.bed.gz
@@ -46,4 +46,4 @@ gunzip -c $predfile | head -1 | awk '{ print $0, "gene_start","gene_body","non_g
 cat headerfile.temp comb.temp | gzip -c > ${predfile/_uniq/_marked}
 
 echo "Tidying up!"
-#rm -v *.temp
+rm -v *.temp
