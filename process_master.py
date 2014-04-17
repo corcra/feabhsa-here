@@ -4,8 +4,8 @@ import sys
 import gzip
 import re
 
-datatype=sys.argv[1]
-base='/Users/stephanie/ll/results/'+datatype+'/'
+base=sys.argv[1]+'/'
+datatype=sys.argv[2]
 
 # this currently has no puprose
 gene_list_path='/Users/stephanie/ll/data/genes/gene_list.bed'
@@ -20,8 +20,8 @@ elif datatype=='TRP':
     times=['DMSO','12.5','25','50']
 
 n=0
-master=gzip.open(base+'dREG_regions.bed.gz','r')
-new_master=gzip.open(base+'dREG_regions_uniq.bed.gz','w')
+master=gzip.open(base+datatype+'_dREG_regions.bed.gz','r')
+new_master=gzip.open(base+datatype+'_dREG_regions_uniq.bed.gz','w')
 
 header='chr\tstart\tend\tdREG_id\t'+'\t'.join(times)+'\tinflation\twhen_smallest'+'\n'
 new_master.write(header)
