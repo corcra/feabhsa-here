@@ -19,6 +19,7 @@ results=/Users/stephanie/ll/results
 # Main files
 rawlist=$results/$datatype\_dREG_regions.bed.gz
 regionlist=$results/$datatype\_dREG_regions_uniq.bed.gz
+final=$results/$datatype\_dREG_regions_marked.bed.gz
 
 # Genes (for later)
 gene_list=$data/genes/gene_list.bed
@@ -78,8 +79,6 @@ done
 echo "Master file created, processing!"
 python process_master.py $results $datatype
 
-exit
-
 echo "Looking at overlap with genomic regions and ChIPseq data!"
 
 awk 'BEGIN{OFS="\t"}{ if ($6=="+") { print $1, $2, $2+1, $4, $6 } else { print $1, $3-1, $3, $4, $6 } }' $gene_list > gene_starts.temp
@@ -109,7 +108,7 @@ gunzip -c $H3K27ac | bedmap --delim '\t' --range 500 --sum pred.temp - > H3K27ac
 echo "Combining!"
 paste pred.temp gene_start.temp gb.temp non_gene.temp dist.temp H3K4me1.temp H3K4me3.temp H3K27ac.temp > comb.temp
 gunzip -c $regionlist | head -1 | awk '{ print $0, "gene_start","gene_body","non_gene","closest_gene","distance","strand","H3K4me1","H3K4me3","H3K27ac" }' > headerfile.temp
-cat headerfile.temp comb.temp | gzip -c > ${regionlist/_uniq/_marked}
+cat headerfile.temp comb.temp | gzip -c > $final
 
 echo "Tidying up!"
 rm -v *.temp
