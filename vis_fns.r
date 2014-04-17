@@ -5,7 +5,6 @@ get_violations<-function(df){
     for (col in seq(2,ncol(df))){
         one_seen<-one_seen|df[,col]==1
         violations<-violations+1*((one_seen)*(df[,col]==0))
-        browser()
     }
     return(violations)
 }
