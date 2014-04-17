@@ -1,10 +1,10 @@
 #!/bin/bash
 # Generate appropriate bed files to use with the metaplotting...
-#
-master=$1
-#master=/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz
-folder=$2
-#folder=/Users/stephanie/ll/results/FP/metaplot
+
+#master=$1
+master=/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz
+#folder=$2
+folder=/Users/stephanie/ll/results/FP/metaplot
 
 gunzip -c $master > m.temp
 
