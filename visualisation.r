@@ -48,14 +48,6 @@ data_howfreq<-data.frame(regions,howmany,first_appearance)
 ggplot(data_howfreq,aes(x=howmany,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("How many timepoints do hits occur in?")+xlab("Number of timepoints")+facet_grid(~regions,margins=TRUE)
 ggsave("pdfs/repetition_regions.pdf",width=10)
 
-
-# How many violations? (e.g. disappearance after appearance)
-cat("visualisation.r: violations\n")
-violations<-factor(viol_prefac,c(0,1,2,3,4))
-data_viol<-data.frame(regions,violations)
-ggplot(data_viol,aes(x=violations,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions,margins=TRUE)
-ggsave("pdfs/violations_regions.pdf",width=10)
-
 #How consistent are they?
 cat("visualisation.r: When do consistent regions appear?\n")
 viol_prefac<-get_violations(data[,time_points])
@@ -64,6 +56,13 @@ consistent<-factor(consistent,c(TRUE,FALSE))
 data_consistent<-data.frame(regions,consistent,first_appearance)
 ggplot(data_consistent,aes(x=first_appearance,fill=consistent))+facet_grid(consistent~regions)+geom_histogram(position="dodge")+mytheme+scale_fill_manual(values=c("darkorchid1","grey60"))+ggtitle("When do consistent regions appear? (consistent meaning that once they appear, they do not disappear)")
 ggsave("pdfs/consistent_regions.pdf",width=10)
+
+# How many violations? (e.g. disappearance after appearance)
+cat("visualisation.r: violations\n")
+violations<-factor(viol_prefac,c(0,1,2,3,4))
+data_viol<-data.frame(regions,violations)
+ggplot(data_viol,aes(x=violations,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions,margins=TRUE)
+ggsave("pdfs/violations_regions.pdf",width=10)
 
 # Now, are they earlier (<12.5) or later(>12.5)? (do this better!) (STRICTLY early v. STRICTLY late...)
 cat("visualisation.r: regions only appearing in early/late timepoints?\n")
