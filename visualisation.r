@@ -50,11 +50,11 @@ ggsave("pdfs/repetition_regions.pdf",width=10)
 
 
 # How many violations? (e.g. disappearance after appearance)
-#cat("visualisation.r: violations\n")
-#violations<-factor(viol_prefac,c(0,1,2,3,4))
-#data_viol<-data.frame(regions,violations)
-#ggplot(data_viol,aes(x=violations,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions,margins=TRUE)
-#ggsave("violations_regions.pdf",width=10)
+cat("visualisation.r: violations\n")
+violations<-factor(viol_prefac,c(0,1,2,3,4))
+data_viol<-data.frame(regions,violations)
+ggplot(data_viol,aes(x=violations,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions,margins=TRUE)
+ggsave("pdfs/violations_regions.pdf",width=10)
 
 #How consistent are they?
 cat("visualisation.r: When do consistent regions appear?\n")
