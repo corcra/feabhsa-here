@@ -6,7 +6,7 @@ source('vis_fns.r')
 
 args<-commandArgs(TRUE)
 #datapath<-args[1]
-datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
+datapath<-'/Users/stephanie/ll/results/FP_dREG_regions_marked.bed.gz'
 fakedatapath<-'/Users/stephanie/ll/results/fake/fake_marked.bed.gz'
 data<-read.table(datapath,header=T,na.strings="NAN")
 fakedata<-read.table(fakedatapath,header=T,na.strings="NAN")
@@ -59,7 +59,7 @@ ggsave("pdfs/consistent_regions.pdf",width=10)
 
 # How many violations? (e.g. disappearance after appearance)
 cat("visualisation.r: violations\n")
-violations<-factor(viol_prefac,c(0,1,2,3,4))
+violations<-factor(viol_prefac,c(0,1,2,3,4,5))
 data_viol<-data.frame(regions,violations)
 ggplot(data_viol,aes(x=violations,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions,margins=TRUE)
 ggsave("pdfs/violations_regions.pdf",width=10)
