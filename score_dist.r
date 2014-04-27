@@ -1,8 +1,8 @@
 library(ggplot2)
 timedata<-function(time){
-     gs<-read.table(paste0(time,"min/FP_",time,"min.gs.predictions.bedGraph.gz"))
-     gb<-read.table(paste0(time,"min/FP_",time,"min.gb.predictions.bedGraph.gz"))
-     ng<-read.table(paste0(time,"min/FP_",time,"min.ng.predictions.bedGraph.gz"))
+     gs<-read.table(paste0("FP_",time,"min.gs.predictions.bedGraph.gz"))
+     gb<-read.table(paste0("FP_",time,"min.gb.predictions.bedGraph.gz"))
+     ng<-read.table(paste0("FP_",time,"min.ng.predictions.bedGraph.gz"))
      region<-c(rep("gene_start",nrow(gs)),rep("gene_body",nrow(gb)),rep("non_gene",nrow(ng)))
      region<-factor(region,c("gene_start","gene_body","non_gene"))
      score<-c(gs[,4],gb[,4],ng[,4])
