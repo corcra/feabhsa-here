@@ -7,11 +7,11 @@
 #               3. Classify all points by genomic region, get overlap with histone marks.
 
 # Threshold
-THRE=0.5
+THRE=0.8
 
 # Inputs!
 datatype=FP     # eg FP, TRP... not sure why I'm still asking this
-suffix=40m_SVM  # eg full_SVM, 40m_SVM... other?
+suffix=full_SVM         # eg full_SVM, 40m_SVM... other?
 
 # Paths
 data=/Users/stephanie/ll/data
@@ -79,6 +79,7 @@ do
     echo "Deleting files."
     rm -v *.temp
     rm -v $pos.temp
+    rm -v $preds.temp
 done
 
 # Call on the other script to tidy this up!
