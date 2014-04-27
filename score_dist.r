@@ -1,4 +1,9 @@
 library(ggplot2)
+
+# this one weird value will appear in your data for no reason
+weirdval=0.179973493896357
+#weirdval=-0.229395386677444
+
 timedata<-function(time){
      gs<-read.table(paste0("FP_",time,"min.gs.predictions.bedGraph.gz"))
      gb<-read.table(paste0("FP_",time,"min.gb.predictions.bedGraph.gz"))
@@ -25,8 +30,8 @@ alldata<-rbind(alldata,timedata(50))
 cat("Loaded 50min\n")
 
 # Check for that weird value, delete it...
-print(mean(alldata$score==-0.229395386677444))
-alldata<-alldata[alldata$score!=-0.229395386677444,]
+print(mean(alldata$score==weirdval))
+alldata<-alldata[alldata$score!=weirdval,]
 
 region_cols<-c("firebrick1","orange1","turquoise3","gray")
 ggplot(alldata,aes(x=score,fill=region))+geom_histogram(binwidth=0.01)+facet_wrap(time~region,ncol=3,scales="free")+scale_fill_manual(values=region_cols)
