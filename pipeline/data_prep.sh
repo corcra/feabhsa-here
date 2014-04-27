@@ -10,11 +10,13 @@
 THRE=0.5
 
 # Inputs!
-datatype=$1     # eg FP, TRP...
+datatype=FP     # eg FP, TRP... not sure why I'm still asking this
+suffix=40m_SVM  # eg full_SVM, 40m_SVM... other?
 
 # Paths
-data=/Users/stephanie/ll/data/
-results=/Users/stephanie/ll/results
+data=/Users/stephanie/ll/data
+folder=$data/dREG/$suffix
+results=/Users/stephanie/ll/results/$suffix
 
 # Main files
 rawlist=$results/$datatype\_dREG_regions.bed.gz
@@ -36,16 +38,19 @@ for datatime in 0min 2min 5min 12.5min 25min 50min
 do
     echo "Encorporating" $datatime
     # Set up vars
-    folder=$results/$datatype/$datatime
     preds=$folder/$datatype\_$datatime.predictions.bedGraph.gz
-    pos=${preds/predictions/positive}
+    pos=$results/$datatype\_$datatime.positive.bedGraph.gz
 
     # What is the score distribution? (can plot this later as necessary)
     echo "Getting scores."
-    gunzip -c $preds | awk '{ print $4 }' > ${preds/.predictions.bedGraph.gz/.scores.txt}
+    gunzip -c $preds > $preds.temp
+    bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $gene_start | gzip -c > ${preds/.predictions/.gs.predictions}
+    bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $gene_body | gzip -c > ${preds/.predictions/.gb.predictions}
+    bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $non_gene | gzip -c > ${preds/.predictions/.ng.predictions}
+
     # Expands positive regions into window +-50, merges these.
     echo "Getting regions."
-    gunzip -c $preds | awk 'BEGIN{OFS="\t"} ($4 > '"$THRE"') { print $1,$2-50,$3+51,$4 }' | sort-bed - | bedops --merge - | awk 'BEGIN{OFS="\t"}{ print $1, $2, $3, "'$datatype'_" "'${datatime/min/}'_" NR }' > $pos.temp
+    awk 'BEGIN{OFS="\t"} ($4 > '"$THRE"') { print $1,$2-50,$3+51,$4 }' $preds.temp | sort-bed - | bedops --merge - | awk 'BEGIN{OFS="\t"}{ print $1, $2, $3, "'$datatype'_" "'${datatime/min/}'_" NR }' > $pos.temp
 
     # Create the master list, if necessary
     if ! [ -a $rawlist ]
@@ -73,6 +78,7 @@ do
     gzip -c $pos.temp > $pos
     echo "Deleting files."
     rm -v *.temp
+    rm -v $pos.temp
 done
 
 # Call on the other script to tidy this up!
