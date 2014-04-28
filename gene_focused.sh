@@ -1,12 +1,18 @@
 #!/bin/bash
 
-master=/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz
+suffix=40m_SVM
+master=$1
+#master=/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz
+
 genefolder=/Users/stephanie/ll/data/genes
-geneanalysis=$genefolder/analyse_FP
+
+results=/Users/stephanie/ll/results/$suffix
+master=$results/FP_dREG_regions_marked.bed.gz
+
 genelist=$genefolder/gene_list.bed
-gunzip -c $master | sed '1d' | bedmap --range 500 --multidelim "|" --delim "|" --echo --count --echo-map $genelist - > $geneanalysis/gene_list_with_overlaps.bed
-python gene_focused_tidy.py
-mv $geneanalysis/gene_list_with_overlaps_tidy.bed $geneanalysis/gene_list_with_overlaps.bed
+gunzip -c $master | sed '1d' | bedmap --range 500 --multidelim "|" --delim "|" --echo --count --echo-map $genelist - > $results/gene_list_with_overlaps.bed
+python gene_focused_tidy.py $results/gene_list_with_overlaps.bed $results/gene_list_with_overlaps_tidy.bed
+mv $results/gene_list_with_overlaps_tidy.bed $results/gene_list_with_overlaps.bed
 
 # R code
 # library(ggplot2)
@@ -21,9 +27,9 @@ mv $geneanalysis/gene_list_with_overlaps_tidy.bed $geneanalysis/gene_list_with_o
 #
 
 # get the genes with no hits at gene_start
-awk '{ if ($7==0) print $0 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/genes_no_hits.bed
-awk '{ if (($7>0)&&($8==0)) print $0 }' $geneanalysis/gene_list_with_overlaps.bed > $geneanalysis/genes_only_body_hits.bed
-awk '{ print $10 }' $geneanalysis/genes_only_body_hits.bed | tr ';' '\n' > $geneanalysis/dREG_IDs_onlybody.txt
-echo -e 'ID\tstart\tbody' > $geneanalysis/gene_IDs_bodyhit.txt
-awk 'BEGIN{OFS="\t"}{ if ($9>0) print $4,$8,$9 }' $geneanalysis/gene_list_with_overlaps.bed >> $geneanalysis/gene_IDs_bodyhit.txt
+awk '{ if ($7==0) print $0 }' $results/gene_list_with_overlaps.bed > $results/genes_no_hits.bed
+awk '{ if (($7>0)&&($8==0)) print $0 }' $results/gene_list_with_overlaps.bed > $results/genes_only_body_hits.bed
+awk '{ print $10 }' $results/genes_only_body_hits.bed | tr ';' '\n' > $results/dREG_IDs_onlybody.txt
+echo -e 'ID\tstart\tbody' > $results/gene_IDs_bodyhit.txt
+awk 'BEGIN{OFS="\t"}{ if ($9>0) print $4,$8,$9 }' $results/gene_list_with_overlaps.bed >> $results/gene_IDs_bodyhit.txt
 # (use this in the visualisation script! when are these guys discovered?)
