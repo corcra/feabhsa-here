@@ -106,5 +106,6 @@ echo "After QC, there are" `wc -l $result | awk '{ print $1 }'` "genes remaining
 mv $result.final $result
 
 # --- Tidy! --- #
-rm -v *.temp
-rm -v $result.qc
+rm *.temp
+rm $result.temp
+rm $result.qc
