@@ -104,7 +104,7 @@ awk '{ if ($6<$7) print $0 }' res3.temp > res4.temp
 echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had density1 > density2 - removed."
 # transition overlap with a dREG hit? kick it out
 awk '{ if (11=="+") { print $8, $9+3,$9+3+1,$1,$11,$2,$3,$4,$5,$6,$7,$9,$10,$12,$13} else { print $8, $10-$3-1, $10-$3, $1,$11,$2,$3,$4,$5,$6,$7,$9,$10,$12,$13} }' res4.temp | sort-bed - > res.bed.temp
-gunzip -c $dREG_list | bedmap --range 500 --echo --indicator res.bed.temp - | grep '|0' | awk 'BEGIN{FS="|"}{print $1}' > res2.bed.temp
+gunzip -c $dREG_list | sed '1d' | bedmap --range 500 --echo --indicator res.bed.temp - | grep '|0' | awk 'BEGIN{FS="|"}{print $1}' > res2.bed.temp
 echo $[`wc -l res.bed.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed."
 
 echo "Overall," $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes removed for QC."
