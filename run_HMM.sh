@@ -1,6 +1,6 @@
 #!/bin/bash
 
-suffix=40m_SVM      # eg full_SVM, 40m_SVM...
+suffix=full_SVM      # eg full_SVM, 40m_SVM...
 
 hmm_dir=/Users/stephanie/ll/from_hojoong
 cd $hmm_dir
@@ -9,9 +9,6 @@ bg_dir=/Users/stephanie/ll/data/FP/bedgraphs
 time=$1
 
 dREG_list=/Users/stephanie/ll/results/$suffix/FP_dREG_regions_marked.bed.gz
-logfile=$hmm_dir/result/V6.5_$time\min_bin$binsize.logfile.txt
-echo `date` > $logfile
-echo "Suffix is" $suffix >> $logfile
 
 if [ $time == "5" ]
 then
@@ -36,7 +33,12 @@ then
     thre=150000
     binsize=5000
 fi
-echo "Using threshold of" $thre "and binsize of" $binsize "because time is" $time >> $logfile
+
+logfile=$hmm_dir/result/V6.5_$time\min_bin$binsize.$suffix.logfile.txt
+
+echo `date` > $logfile
+echo "Suffix is" $suffix >> $logfile
+echo "Using threshold of" $thre "and binsize of" $binsize "because time is" $time"." >> $logfile
 
 bg_plus=$bg_dir/V6.5_$1\minFP_Plus.bedGraph
 bg_minus=$bg_dir/V6.5_$1\minFP_Minus.bedGraph
@@ -49,7 +51,7 @@ bi0_minus=$hmm_dir/bi/V6.5_0min.m.bi
 genes_preformatted=/Users/stephanie/ll/results/$suffix/genes_gs_hit.bed
 genelist=$hmm_dir/list/genes_over$thre.txt
 
-result=$hmm_dir/result/V6.5_$time\min_bin$binsize.txt
+result=$hmm_dir/result/V6.5_$time\min_bin$binsize.$suffix.txt
 
 # --- prepare the genelist --- #
 if ! [ -a $genelist ]
@@ -59,6 +61,7 @@ if ! [ -a $genelist ]
         echo "There are" `wc -l $genelist | awk '{print $1 }'` "genes remaining!"
 fi
 
+echo `wc -l $genelist | awk '{print $1 }'` "starting genes to analyse." >>$logfile
 
 #  --- prepare the bedgraphs --- #
 if ! [ -e $bi_plus ]
