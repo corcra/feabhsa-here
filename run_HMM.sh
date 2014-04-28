@@ -7,11 +7,32 @@ cd $hmm_dir
 
 bg_dir=/Users/stephanie/ll/data/FP/bedgraphs
 time=$1
-binsize=$2
 
+if [ $time == "5" ]
+then
+    thre=30000
+    binsize=500
+fi
 
-#thre=$((2*$binsize))
-thre=25000
+if [ $time == "12.5" ]
+then
+    thre=30000
+    binsize=1000
+fi
+
+if [ $time == "25" ]
+then
+    thre=60000
+    binsize=2000
+fi
+
+if [ $time == "50" ]
+then
+    thre=150000
+    binsize=5000
+fi
+echo "Using threshold of" $thre "and binsize of" $binsize "because time is" $time
+
 #if [ $thre -lt $((2*$binsize)) ]
 #then
 #    echo "Genes must be at least twice as long as the binsize! Modifying. New threshold:" $thre
@@ -73,8 +94,16 @@ echo `sed '1q;d' $result` "chr" "start" "end" "n_gs" "n_gb" > header.temp
 sort -k4,4 $genes_preformatted > genes.temp
 # sort the result-list, then perform a join on the genename field... the result should be the addition of two columns - first is the number of dREG hits in the gene start region, second is number of hits in the gene body ... we can use this for later analysis!
 sort -k2,2 $result | join -1 2 -2 4 - genes.temp | awk 'BEGIN{OFS="\t"}{ print $2, $1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12 }' > $result.temp
-cat header.temp $result.temp > $result.final
+
+# --- do some QC! --- #
+# rounds = 200, kick it out
+# transition > len, kick it out
+# density1 > density2, kick it out
+awk '{ if (($4!=200)&&($5<$3)&&($6<$7)) print $0 }' $result.temp > $result.qc
+cat header.temp $result.qc > $result.final
+echo "After QC, there are " `wc -l $result | awk '{ print $1 }'` "genes remaining."
 mv $result.final $result
 
 # --- Tidy! --- #
 rm -v *.temp
+rm -v $result.qc
