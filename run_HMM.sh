@@ -9,6 +9,9 @@ bg_dir=/Users/stephanie/ll/data/FP/bedgraphs
 time=$1
 
 dREG_list=/Users/stephanie/ll/results/$suffix/FP_dREG_regions_marked.bed.gz
+logfile=$hmm_dir/result/V6.5_$time\min_bin$binsize.logfile.txt
+echo `date` > $logfile
+echo "Suffix is" $suffix >> $logfile
 
 if [ $time == "5" ]
 then
@@ -33,7 +36,7 @@ then
     thre=150000
     binsize=5000
 fi
-echo "Using threshold of" $thre "and binsize of" $binsize "because time is" $time
+echo "Using threshold of" $thre "and binsize of" $binsize "because time is" $time >> $logfile
 
 bg_plus=$bg_dir/V6.5_$1\minFP_Plus.bedGraph
 bg_minus=$bg_dir/V6.5_$1\minFP_Minus.bedGraph
@@ -95,24 +98,24 @@ sort -k2,2 $result | join -1 2 -2 4 - genes.temp  > res.temp
 # --- do some QC! --- #
 # rounds = 200, kick it out
 awk '{ if ($4!=200) print $0 }' res.temp > res2.temp
-echo $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.temp | awk '{print $1}'`] "genes had >200 rounds - removed."
+echo $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.temp | awk '{print $1}'`] "genes had >200 rounds - removed." >> $logfile
 # transition > len, kick it out
 awk '{ if ($5<$3) print $0 }' res2.temp > res3.temp
-echo $[`wc -l res2.temp | awk '{ print $1 }'` - `wc -l res3.temp | awk '{print $1}'`] "genes had transition > len - removed."
+echo $[`wc -l res2.temp | awk '{ print $1 }'` - `wc -l res3.temp | awk '{print $1}'`] "genes had transition > len - removed." >> $logfile
 # density1 > density2, kick it out
 awk '{ if ($6<$7) print $0 }' res3.temp > res4.temp
-echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had density1 > density2 - removed."
+echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had density1 > density2 - removed." >> $logfile
 # transition overlap with a dREG hit? kick it out
 awk '{ if (11=="+") { print $8, $9+3,$9+3+1,$1,$11,$2,$3,$4,$5,$6,$7,$9,$10,$12,$13} else { print $8, $10-$3-1, $10-$3, $1,$11,$2,$3,$4,$5,$6,$7,$9,$10,$12,$13} }' res4.temp | sort-bed - > res.bed.temp
 gunzip -c $dREG_list | sed '1d' | bedmap --range 500 --echo --indicator res.bed.temp - | grep '|0' | awk 'BEGIN{FS="|"}{print $1}' > res2.bed.temp
-echo $[`wc -l res.bed.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed."
+echo $[`wc -l res.bed.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed." >> $logfile
 
-echo "Overall," $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes removed for QC."
+echo "Overall," $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes removed for QC." >> $logfile
 # convert it back into something nice (by nice I really just mean 'something along the lines of the output of the HMM'...)
 echo "gid" "name" "len" "rounds" "transition" "density1" "density2" "chr" "gene_start" "gene_end" "n_gs" "n_gb" > final.temp
 awk 'BEGIN{OFS="\t"}{ print $6, $4, $7, $8, $9, $10, $11, $1, $12, $13, $14, $15 }' res2.bed.temp >> final.temp
 
-echo "After QC, there are" `wc -l final.temp| awk '{ print $1 }'` "genes remaining."
+echo "After QC, there are" `wc -l final.temp| awk '{ print $1 }'` "genes remaining." >> $logfile
 mv final.temp $result
 
 # --- Tidy! --- #
