@@ -4,8 +4,9 @@
 import sys
 
 bedmap_mess=open('/Users/stephanie/ll/data/genes/analyse_FP/gene_list_with_overlaps.bed','r')
-outfile=open('/Users/stephanie/ll/data/genes/analyse_FP/gene_list_with_overlaps_tidy.bed','w')
-errorfile=open('/Users/stephanie/ll/data/genes/analyse_FP/inconsistent.txt','w')
+bedmap_mess=open(sys.argv[1],'r')
+outfile=open(sys.argv[2],'w')
+#errorfile=open('/Users/stephanie/ll/data/genes/analyse_FP/inconsistent.txt','w')
 
 i=0
 for line in bedmap_mess:
@@ -24,9 +25,9 @@ for line in bedmap_mess:
             which.append(o.split()[3])
     newline = genedata+'\t'+str(totalcounts)+'\t'+str(sum(nGene_start))+'\t'+str(sum(nBody))+'\t'+';'.join(which)
     outfile.write(newline+'\n')
-    if not sum(nGene_start) + sum(nBody) +sum(nOutside)== totalcounts:
+#    if not sum(nGene_start) + sum(nBody) +sum(nOutside)== totalcounts:
   #      print 'huh?', nGene_start, nBody, totalcounts, line
 #        print i
 #        i=i+1
-        errorfile.write(newline+'\t'+'-'.join(map(str,nOutside))+'\n')
+        #errorfile.write(newline+'\t'+'-'.join(map(str,nOutside))+'\n')
 #        sys.exit()
