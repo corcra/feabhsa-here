@@ -85,6 +85,7 @@ if ! [ -e $bi_minus ]
 fi
 
 # --- run the HMM --- #
+echo "Running HMM!"
 ./code/hmm2 -o $result -p $bi_plus -m $bi_minus -p0 $bi0_plus -m0 $bi0_minus -b $binsize -g $genelist -c list/mm9chr.txt
 
 # --- check for gene-body enhancers --- #
