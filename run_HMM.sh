@@ -56,7 +56,7 @@ result=$hmm_dir/result/V6.5_$time\min_bin$binsize.txt
 if ! [ -a $genelist ]
     then
         echo "Processing genelist!"
-        awk 'BEGIN{OFS="\t"}{ if ((($3-$2)>'$thre')&&($7>0)) print NR,$4,$4,$1,$6,$2,$3 }' $genes_preformatted > $genelist
+        awk 'BEGIN{OFS="\t"}{ if (($3-$2)>'$thre') print NR,$4,$4,$1,$5,$2,$3 }' $genes_preformatted > $genelist
         echo "There are" `wc -l $genelist | awk '{print $1 }'` "genes remaining!"
 fi
 
@@ -102,7 +102,7 @@ sort -k2,2 $result | join -1 2 -2 4 - genes.temp | awk 'BEGIN{OFS="\t"}{ print $
 # density1 > density2, kick it out
 awk '{ if (($4!=200)&&($5<$3)&&($6<$7)) print $0 }' $result.temp > $result.qc
 cat header.temp $result.qc > $result.final
-echo "After QC, there are " `wc -l $result | awk '{ print $1 }'` "genes remaining."
+echo "After QC, there are" `wc -l $result | awk '{ print $1 }'` "genes remaining."
 mv $result.final $result
 
 # --- Tidy! --- #
