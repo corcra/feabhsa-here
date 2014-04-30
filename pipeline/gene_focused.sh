@@ -6,12 +6,16 @@ suffix=40m_SVM      # eg 40m_SVM, full_SVM
 genefolder=/Users/stephanie/ll/data/genes
 
 results=/Users/stephanie/ll/results/$suffix
-master=$results/FP_dREG_regions_marked.bed.gz
-
+confident=$results/FP_dREG_confident_0.8.bed.gz
+uncertain=$results/FP_dREG_uncertain_0.5.bed.gz
 genelist=$genefolder/gene_list.bed
-gunzip -c $master | sed '1d' | bedmap --range 500 --multidelim "|" --delim "|" --echo --count --echo-map $genelist - > $results/gene_list_with_overlaps.bed
+
+# --- produce the goodlist --- #
+gunzip -c $confident | sed '1d' | bedmap --range 500 --multidelim "|" --delim "|" --echo --count --echo-map $genelist - > $results/gene_list_with_overlaps.bed
 python gene_focused_tidy.py $results/gene_list_with_overlaps.bed $results/gene_list_with_overlaps_tidy.bed
 mv $results/gene_list_with_overlaps_tidy.bed $results/gene_list_with_overlaps.bed
+# --- produce the bad list --- #
+#gunzip -c $uncertain | sed '1d' | bedops --not-element-of -1
 
 # R code
 # library(ggplot2)
