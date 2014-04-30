@@ -4,14 +4,13 @@ import sys
 import gzip
 import re
 
-base=sys.argv[1]+'/'
-datatype=sys.argv[2]
+#base=sys.argv[1]+'/'
+#datatype=sys.argv[2]
+infile_path=sys.argv[1]
+outfile_path=sys.argv[2]
+datatype=sys.argv[3]
 
-# this currently has no puprose
-gene_list_path='/Users/stephanie/ll/data/genes/gene_list.bed'
-gene_list=open(gene_list_path,'r').readlines()
-key_vals = [(line.split()[3],(int(line.split()[1]),int(line.split()[2]),line.split()[5])) for line in gene_list]
-gene_dict={ID:val for (ID,val) in key_vals}
+print 'process_master.py: Processing', infile_path, 'into', outfile_path
 
 # what to expect in the master file?
 if datatype=='FP':
@@ -20,12 +19,13 @@ elif datatype=='TRP':
     times=['DMSO','12.5','25','50']
 
 n=0
-master=gzip.open(base+datatype+'_dREG_regions.bed.gz','r')
-new_master=gzip.open(base+datatype+'_dREG_regions_uniq.bed.gz','w')
+#master=gzip.open(base+datatype+'_dREG_regions.bed.gz','r')
+infile=gzip.open(infile_path,'r')
+outfile=gzip.open(outfile_path,'w')
 
 header='chr\tstart\tend\tdREG_id\t'+'\t'.join(times)+'\tinflation\twhen_smallest'+'\n'
-new_master.write(header)
-for line in master:
+outfile.write(header)
+for line in infile:
     time_pattern=[]
     n=n+1
     chro=line.split()[0]
@@ -60,4 +60,4 @@ for line in master:
     final_size=int(uniq_end)-int(uniq_start)
     inflation=float(final_size)/smallest
     uniq_line=chro+'\t'+uniq_start+'\t'+uniq_end+'\t'+uniq_ID+'\t'+'\t'.join(time_pattern)+'\t'+str(inflation)+'\t'+when_smallest+'\n'
-    new_master.write(uniq_line)
+    outfile.write(uniq_line)
