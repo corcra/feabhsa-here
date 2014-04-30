@@ -1,6 +1,7 @@
 #!/bin/bash
 
 suffix=40m_SVM      # eg 40m_SVM, full_SVM
+#suffix=full_SVM      # eg 40m_SVM, full_SVM
 
 genefolder=/Users/stephanie/ll/data/genes
 
@@ -25,12 +26,13 @@ mv $results/gene_list_with_overlaps_tidy.bed $results/gene_list_with_overlaps.be
 #
 
 # get the genes with hits at gene_start
-awk '{ if ($7!=0) print $1,$2,$3,$4,$6,$7,$8 }' $results/gene_list_with_overlaps.bed > $results/genes_gs_hit.bed
+awk '{ if ($7!=0) print $0 }' $results/gene_list_with_overlaps.bed > $results/genes_gs_hit.bed
 echo "# genes with dREG hit at TSS:" `wc -l $results/genes_gs_hit.bed | awk '{ print $1 }'`
 # now, which of these have hits in the body?
-echo "# genes with dREG hit at TSS and in gene body:" `awk '{ if ($7!=0) print $0 }' $results/genes_gs_hit.bed | wc -l`
+echo "# genes with dREG hit at TSS and in gene body:" `awk '{ if ($8!=0) print $0 }' $results/genes_gs_hit.bed | wc -l`
 
 
+# not sure how useful thi sstuff is #
 # get the genes with no hits at gene_start
 awk '{ if ($7==0) print $0 }' $results/gene_list_with_overlaps.bed > $results/genes_no_hits.bed
 awk '{ if (($7>0)&&($8==0)) print $0 }' $results/gene_list_with_overlaps.bed > $results/genes_only_body_hits.bed
