@@ -24,10 +24,10 @@ results=/Users/stephanie/ll/results/$suffix
 raw_high=$results/dREG_regions_$THRE_high.bed.gz
 proc_high=$results/dREG_regions_proc_$THRE_high.bed.gz
 pre_QC_confident=$results/dREG_regions_preQC_$THRE_high.bed.gz
-confident=$results/$datatype\_dREG_regions_confident_$THRE_high.bed.gz
+confident=$results/dREG_regions_confident_$THRE_high.bed.gz
 # --- uncertain ---
-raw_low=$results/dREG_maybe_$THRE_low.bed.gz
-proc_low=$results/dREG_maybe_proc_$THRE_low.bed.gz
+raw_low=$results/dREG_regions_maybe_$THRE_low.bed.gz
+proc_low=$results/dREG_regions_maybe_proc_$THRE_low.bed.gz
 maybe=$results/dREG_regions_maybe_$THRE_low.bed.gz
 
 # Genes (for later)
