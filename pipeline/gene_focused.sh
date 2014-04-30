@@ -24,23 +24,23 @@ python gene_focused_tidy.py $results/genes_confident_overlap.bed $results/genes_
 mv $results/genes_confident_overlap_tidy.bed $results/genes_confident_overlap.bed
 
 # --- produce a list of genes with hits in their TSS - based on the maybe data --- #
-awk '{ if ($8!=0) print $0 }' $results/genes_maybe_overlap.bed > $results/genes_gs_hit.bed
+awk '{ if ($8!=0) print $0 }' $results/genes_maybe_overlap.bed > $results/active_genes.bed
 
 # --- produce a list of genes with hits in their gene body - based on the confident data --- #
-awk '{ if ($9!=0) print $0 }' $results/genes_confident_overlap.bed | bedmap --skip-unmapped --echo - $results/genes_gs_hit.bed > $results/genes_gs_gb_hit.bed
+awk '{ if ($9!=0) print $0 }' $results/genes_confident_overlap.bed | bedmap --skip-unmapped --echo - $results/active_genes.bed > $results/active_genes_gb_hit.bed
 
 # --- produce a list of genes with NO HITS in their gene body - based on the maybe data --- #
-awk '{ if ($9==0) print $0 }' $results/genes_gs_hit.bed > $results/genes_gs_nogb_hit.bed
+awk '{ if ($9==0) print $0 }' $results/active_genes.bed > $results/active_genes_nogb_hit.bed
 
-echo "# genes with dREG hit at TSS:" `wc -l $results/genes_gs_hit.bed | awk '{ print $1 }'`
+echo "# genes with dREG hit at TSS:" `wc -l $results/active_genes.bed | awk '{ print $1 }'`
 # now, which of these have hits in the body?
-echo "# genes with dREG hit at TSS and in gene body:" `wc -l $results/genes_gs_gb_hit.bed | awk '{ print $1 }'`
+echo "# genes with dREG hit at TSS and in gene body:" `wc -l $results/active_genes_gb_hit.bed | awk '{ print $1 }'`
 
 # --- create a list for running the HMM... --- #
-cat $results/genes_gs_gb_hit.bed $results/genes_gs_nogb_hit.bed > $results/genes_for_analysis.bed
+cat $results/active_genes_gb_hit.bed $results/active_genes_nogb_hit.bed > $results/genes_for_analysis.bed
 
 # --- clean up... don't really need these after the master genelist has been created... --- #
-#rm -v genes_gs_hit.bed
+#rm -v active_genes.bed
 #rm -v genes_gs_gb_hit.bed
 #rm -v genes_gs_nogb_hit.bed
 
