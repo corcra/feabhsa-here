@@ -1,7 +1,7 @@
 #!/bin/bash
 
-suffix=full_SVM      # eg full_SVM, 40m_SVM...
-#suffix=40m_SVM      # eg full_SVM, 40m_SVM...
+#suffix=full_SVM      # eg full_SVM, 40m_SVM...
+suffix=40m_SVM      # eg full_SVM, 40m_SVM...
 
 THRE_high=0.8
 
@@ -11,11 +11,8 @@ cd $hmm_dir
 bg_dir=/Users/stephanie/ll/data/FP/bedgraphs
 time=$1
 
-#dREG_list=/Users/stephanie/ll/results/$suffix/FP_dREG_regions_marked.bed.gz
 dREG_list=/Users/stephanie/ll/results/$suffix/dREG_regions_confident_$THRE_high.bed.gz
 genes_preformatted=/Users/stephanie/ll/results/$suffix/genes_for_analysis.bed
-#/Users/stephanie/ll/results/$suffix/genes_gs_hit.bed
-genelist=$hmm_dir/list/genes_over$thre.txt
 
 if [ $time == "5" ]
 then
@@ -41,6 +38,7 @@ then
     binsize=5000
 fi
 
+genelist=$hmm_dir/list/genes_over$thre.txt
 logfile=$hmm_dir/result/V6.5_$time\min_bin$binsize.$suffix.logfile.txt
 
 echo `date` > $logfile
