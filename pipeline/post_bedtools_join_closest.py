@@ -1,8 +1,13 @@
 # !/usr/bin/python
 # Bedtools spits out ties on new lines. This script puts them back on the same line. >:|
 
-distances_file=open('dist.pre.temp','r')
-outfile=open('dist.temp','w')
+import sys
+
+infile_path = sys.argv[1]
+outfile_path = sys.argv[2]
+
+distances_file=open(infile_path,'r')
+outfile=open(outfile_path,'w')
 
 firstline = distances_file.readline()
 current_ID = firstline.split()[0]
