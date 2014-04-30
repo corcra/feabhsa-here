@@ -168,7 +168,19 @@ paste pred_low.temp gene_start_low.temp gb_low.temp non_gene_low.temp dist_low.t
 cat headerfile.temp comb_low.temp | gzip -c > $maybe
 
 echo "Doing quality control!"
-R --file=QC.r --args $pre_QC_confident $confident
+R --slave --file=QC.r --args $pre_QC_confident m.temp
+gzip -c m.temp > $confident
+
+echo "Dividing results into regions, for visualisation." # (this used to be 'extract_regions'
+awk 'BEGIN{OFS="\t"}{ if ($13==1) print $1,$2,$3,$4,$16,$18 }' m.temp | sed '1d'  > $results/metaplot/dREG_gs.bed
+awk 'BEGIN{OFS="\t"}{ if (($14!=0)&&($17>2000)) print $1,$2,$3,$4,$16,$18 }' m.temp | sed '1d'  > $results/metaplot/dREG_gb.bed
+# non-genes don't have strands!
+awk 'BEGIN{OFS="\t"}{ if ($15==1) print $1,$2,$3,$4,$16 }' m.temp | sed '1d' > $results/metaplot/dREG_ng.bed
+
+# -- now for low... (will remove this after sanity checks, I think) ...
+awk 'BEGIN{OFS="\t"}{ if ($13==1) print $1,$2,$3,$4,$16,$18 }' comb_low.temp > $results/metaplot/dREG_maybe_gs.bed
+awk 'BEGIN{OFS="\t"}{ if (($14!=0)&&($17>2000)) print $1,$2,$3,$4,$16,$18 }' comb_low.temp > $results/metaplot/dREG_maybe_gb.bed
+awk 'BEGIN{OFS="\t"}{ if ($15==1) print $1,$2,$3,$4,$16 }' comb_low.temp  > $results/metaplot/dREG_maybe_ng.bed
 
 # --- Create a log file of what just happened --- #
 echo `date` > $results/logfile.txt
