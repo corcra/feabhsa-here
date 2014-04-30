@@ -25,8 +25,10 @@ for line in bedmap_mess:
             nBody.append(1*(o.split()[13]!='0'))
             nOutside.append(int(o.split()[14]))
             which.append(o.split()[3])
-            where_starts.append(o.split()[1])
-            where_ends.append(o.split()[2])
+            # only record the location if it's in the gene body...
+            if o.split()[13]!='0':
+                where_starts.append(o.split()[1])
+                where_ends.append(o.split()[2])
     newline = genedata+'\t'+str(totalcounts)+'\t'+str(sum(nGene_start))+'\t'+str(sum(nBody))+'\t'+';'.join(which)+'\t'+';'.join(where_starts)+'\t'+';'.join(where_ends)
     outfile.write(newline+'\n')
 #    if not sum(nGene_start) + sum(nBody) +sum(nOutside)== totalcounts:
