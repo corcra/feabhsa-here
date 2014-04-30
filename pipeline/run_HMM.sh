@@ -59,7 +59,7 @@ result=$hmm_dir/result/V6.5_$time\min_bin$binsize.$suffix.txt
 if ! [ -a $genelist ]
     then
         echo "Processing genelist!"
-        awk 'BEGIN{OFS="\t"}{ if (($3-$2)>'$thre') print NR,$4,$4,$1,$5,$2,$3 }' $genes_preformatted > $genelist
+        awk 'BEGIN{OFS="\t"}{ if (($3-$2)>'$thre') print NR,$4,$4,$1,$6,$2,$3 }' $genes_preformatted > $genelist
         echo "There are" `wc -l $genelist | awk '{print $1 }'` "genes remaining!"
 fi
 
