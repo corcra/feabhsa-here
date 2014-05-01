@@ -15,6 +15,7 @@ maybe=$results/dREG_regions_maybe_$THRE_low.bed.gz
 genelist=$genefolder/gene_list.bed
 
 # --- get the gene-dREG overlap for both confidence datasets... --- #
+# # --- this may be unnecessary based on shifting this part of the analysis to get_covariates... let's see... -#
 gunzip -c $maybe | sed '1d' | bedmap --range 500 --multidelim "|" --delim "|" --echo --count --echo-map $genelist - > $results/genes_maybe_overlap.bed
 python gene_focused_tidy.py $results/genes_maybe_overlap.bed $results/genes_maybe_overlap_tidy.bed
 mv $results/genes_maybe_overlap_tidy.bed $results/genes_maybe_overlap.bed
