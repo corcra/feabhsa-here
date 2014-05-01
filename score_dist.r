@@ -35,4 +35,4 @@ alldata<-alldata[alldata$score!=weirdval,]
 
 region_cols<-c("firebrick1","orange1","turquoise3","gray")
 ggplot(alldata,aes(x=score,fill=region))+geom_histogram(binwidth=0.01)+facet_wrap(time~region,ncol=3,scales="free")+scale_fill_manual(values=region_cols)
-
+ggsave("dREG_scores_hist.pdf")

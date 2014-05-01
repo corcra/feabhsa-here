@@ -1,5 +1,6 @@
 # Perform quality control (of arbitrary stlye)
 
+args<-commandArgs(TRUE)
 # Options
 consistent<-TRUE
 
@@ -8,8 +9,12 @@ suffix<-"40m_SVM"           # 40m_SVM or full_SVM
 #suffix<-"full_SVM"           # 40m_SVM or full_SVM
 
 # Paths
-inpath<-paste0('/Users/stephanie/ll/results/',suffix,'/FP_dREG_regions_marked.bed.gz')
-outpath<-paste0('/Users/stephanie/ll/results/',suffix,'/FP_dREG_regions_filtered.bed')
+inpath<-args[1]
+outpath<-args[2]
+cat("QC.r : performing QC on ",inpath,", outputting ",outpath,"\n")
+
+#inpath<-paste0('/Users/stephanie/ll/results/',suffix,'/FP_dREG_regions_marked.bed.gz')
+#outpath<-paste0('/Users/stephanie/ll/results/',suffix,'/FP_dREG_regions_filtered.bed')
 
 # Set up some vars
 time_points<-c("X0","X2","X5","X12.5","X25","X50")
@@ -33,7 +38,7 @@ data<-read.table(inpath,header=T,na.strings="NAN")
 if (consistent){
     print("Restricting to consistent hits!")
     violations<-get_violations(data[,time_points])
-    consistent<-violations==0
+    consistent<-violations<=1
     data_cons<-subset(data,consistent==TRUE)
 }
 

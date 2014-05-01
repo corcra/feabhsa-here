@@ -52,7 +52,10 @@ influenced_by_FP<-function(data,time_points,nt,t){
     contingency.table<-matrix(c(wt_inf,nwt_inf,wt_ninf,nwt_ninf),2,2,byrow=TRUE)
     return(contingency.table)
 }
-datapath<-'/Users/stephanie/ll/results/FP/dREG_regions_marked.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_maybe_0.5.bed.gz'
+datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_preQC_0.8.bed.gz'
+
 data<-read.table(datapath,header=T)
 
 time_points<-c("X0","X2","X5","X12.5","X25","X50")

@@ -18,7 +18,8 @@ H3K4me3=$data/ChIPseq/H3K4me3_Marson.sorted.bed.gz
 H3K27ac=$data/ChIPseq/H3K27Ac.sorted.bed.gz
 
 # You know what, just give me the whole path.
-predfile=$1
+#predfile=$1
+predfile=/Users/stephanie/ll/results/FP_dREG_regions_uniq.bed.gz
 gunzip -c $predfile | sed '/inflation/d' > pred.temp
 # (stripping the header line)
 
