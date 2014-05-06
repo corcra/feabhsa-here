@@ -5,13 +5,18 @@
 suffix=40m_SVM
 THRE_high=0.8
 THRE_low=0.5
+promoter_size=1000
+time_region=$1
 
-covar_folder=/Users/stephanie/ll/results/rate_analysis
+covar_folder=/Users/stephanie/ll/results/rate_analysis/$time_region
 genes=/Users/stephanie/ll/results/$suffix/genes_for_analysis.bed
+gene_start=/Users/stephanie/ll/data/gene/gene_start.bed
 confident=/Users/stephanie/ll/results/$suffix/dREG_regions_confident_$THRE_high.bed.gz
 maybe=/Users/stephanie/ll/results/$suffix/dREG_regions_maybe_$THRE_low.bed.gz
 
-time_region=$1
+# --- datasets yo --- #
+introns=/Users/stephanie/ll/data/genes/intronic.bed
+exons=/Users/stephanie/ll/data/genes/exonic.bed
 
 if [ $time_region == "early" ]
 then
@@ -32,7 +37,7 @@ then
 fi
 
 # --- create the 'region of relevance' --- #
-awk 'BEGIN{OFS="\t"}{ print $1, $2+'"$from"',$2+'"$to"',$4,$5,$6 }' $genes  > region_of_relevance.bed
+awk 'BEGIN{OFS="\t"}{ if ($6=="+") print $1, $2+'"$from"',$2+'"$to"',$4,$5,$6; else  print $1, $3-'"$to"', $3-'"$from"',$4,$5,$6  }' $genes  > region_of_relevance.bed
 
 # --- number of dREG hits in region of relevance --- #
 echo "name" "n_gb" > $covar_folder/n_gb.txt
@@ -43,11 +48,16 @@ gunzip -c $maybe | sed '1d' | bedmap --range 500 --echo --indicator region_of_re
 # --- length of intron 1 --- #
 # note, this is produced by process_refseq.py
 # note, this is for all genes - need to specify to specific gene, etc.
-introns=/Users/stephanie/ll/data/genes/intronic.bed
 echo "name" "int1len" > $covar_folder/int1len.txt
 awk '{ if ($5==1) print $4, $3-$2 }' $introns >> $covar_folder/int1len.txt
 
 # --- number of exons in region of relevance --- #
-exons=/Users/stephanie/ll/data/genes/exonic.bed
 echo "name" "n_exon" > $covar_folder/n_exon.txt
+#bedmap --echo --count --delim "\t" region_of_relevance.bed $exons | awk '{ print $4, $7/("'$to'"-"'$from'") }' >> $covar_folder/n_exon.txt
 bedmap --echo --count --delim "\t" region_of_relevance.bed $exons | awk '{ print $4, $7 }' >> $covar_folder/n_exon.txt
+
+# --- nucleosome density at promoter region --- # ... or is it just position of first nucleosome?
+echo "name" "nuc_pos" > $covar_folder/nuc_pos.txt
+# for now, ...?
+
+# ---
