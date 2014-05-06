@@ -54,7 +54,7 @@ awk '{ if ($5==1) print $4, $3-$2 }' $introns >> $covar_folder/int1len.txt
 # --- number of exons in region of relevance --- #
 echo "name" "n_exon" > $covar_folder/n_exon.txt
 #bedmap --echo --count --delim "\t" region_of_relevance.bed $exons | awk '{ print $4, $7/("'$to'"-"'$from'") }' >> $covar_folder/n_exon.txt
-bedmap --echo --count --delim "\t" region_of_relevance.bed $exons | awk '{ print $4, $7 }' >> $covar_folder/n_exon.txt
+bedmap --echo --echo-map-id --delim ";" region_of_relevance.bed $exons | python get_exon_counts.py >> $covar_folder/n_exon.txt
 
 # --- nucleosome density at promoter region --- # ... or is it just position of first nucleosome?
 echo "name" "nuc_pos" > $covar_folder/nuc_pos.txt
