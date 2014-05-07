@@ -12,7 +12,7 @@ bg_dir=/Users/stephanie/ll/data/FP/bedgraphs
 time=$1
 
 dREG_list=/Users/stephanie/ll/results/$suffix/dREG_regions_confident_$THRE_high.bed.gz
-genes_preformatted=/Users/stephanie/ll/results/$suffix/genes_for_analysis.bed
+genes_preformatted=/Users/stephanie/ll/results/$suffix/active_genes.bed
 
 if [ $time == "5" ]
 then
@@ -106,11 +106,14 @@ echo $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.temp | awk '{print $1
 # transition > len, kick it out
 awk '{ if ($5<$3) print $0 }' res2.temp > res3.temp
 echo $[`wc -l res2.temp | awk '{ print $1 }'` - `wc -l res3.temp | awk '{print $1}'`] "genes had transition > len - removed." >> $logfile
+# transition == 2*binsize, kick it out
+awk '{ if ($5!=2*'$binsize') print $0 }' res3.temp > res4.temp
+echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had transition == 2*binsize - removed." >> $logfile
 # density1 > density2, kick it out
-awk '{ if ($6<$7) print $0 }' res3.temp > res4.temp
-echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had density1 > density2 - removed." >> $logfile
+awk '{ if ($6<$7) print $0 }' res4.temp > res5.temp
+echo $[`wc -l res4.temp | awk '{ print $1 }'` - `wc -l res5.temp | awk '{print $1}'`] "genes had density1 > density2 - removed." >> $logfile
 # transition overlap with a dREG hit? kick it out
-awk '{ if (12=="+") { print $8, $9+3,$9+3+1,$1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} else { print $8, $10-$3-1, $10-$3, $1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} }' res4.temp | sort-bed - > res.bed.temp
+awk '{ if (12=="+") { print $8, $9+3,$9+3+1,$1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} else { print $8, $10-$3-1, $10-$3, $1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} }' res5.temp | sort-bed - > res.bed.temp
 gunzip -c $dREG_list | sed '1d' | bedmap --range $binsize --echo --indicator res.bed.temp - | grep '|0' | awk 'BEGIN{FS="|"}{print $1}' > res2.bed.temp
 echo $[`wc -l res.bed.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed." >> $logfile
 
