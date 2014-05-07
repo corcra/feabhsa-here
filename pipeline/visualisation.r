@@ -7,6 +7,10 @@ source('vis_fns.r')
 args<-commandArgs(TRUE)
 #datapath<-args[1]
 datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_maybe_0.5.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_preQC_0.8.bed.gz'
+#datapath<-'/Users/stephanie/ll/data/known_enhancers/dREG_known.bed.gz'
+#datapath<-'/Users/stephanie/ll/data/known_enhancers/dREG_known_active.bed.gz'
 fakedatapath<-'/Users/stephanie/ll/results/fake/fake_marked.bed.gz'
 data<-read.table(datapath,header=T,na.strings="NAN",as.is=TRUE)
 fakedata<-read.table(fakedatapath,header=T,na.strings="NAN",as.is=TRUE)
@@ -34,6 +38,7 @@ regions<-ifelse(data$gene_start==1,"gene_start",ifelse(data$gene_body!=0,"gene_b
 regions<-factor(regions,c("gene_start","gene_body","non_gene"))
 data<-cbind(data,regions)
 region_cols<-c("firebrick1","orange1","turquoise3","gray")
+#region_cols<-c("orange1","turquoise3","gray")
 
 # First appearances
 first_appearance<-time_points[apply(data[,time_points],1,function(x) which(x==1)[1])]
@@ -87,21 +92,16 @@ for (time in time_points){
 }
 
 # For regions that are only seen once... when are they seen?
-cat("visualisation.r: Loner regions\n")
-data_loners<-data_howfreq[howmany_prefac==1,]
-ggplot(data_loners,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+xlab("Timepoint")+ggtitle("For regions appearing only once, when was it?")
-ggsave("../pdfs/loner_regions.pdf",width=10)
-
-# want basically the same graph, but each count will be normalised by the total found at that timepoint
-# so we have... 'what fraction of the hits (at this region at this time) are unique?' (e.g. never seen before/after)
-uniq_exp<-ifelse(rowSums(data_exp[,time_points])==1,TRUE,FALSE)
-du<-cbind(data_exp,uniq_exp)
-ggplot(du,aes(x=first_appearance,fill=uniq_exp,group=regions))+geom_histogram()
+#cat("visualisation.r: Loner regions\n")
+#data_loners<-data_howfreq[howmany_prefac==1,]
+#ggplot(data_loners,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+xlab("Timepoint")+ggtitle("For regions appearing only once, when was it?")
+#ggsave("../pdfs/loner_regions.pdf",width=10)
 
 # When do the regions first appear? (note, they may disappear and reappear - this takes very first appearance)
 cat("visualisation.r: First appearance of regions!\n")
 ggplot(data,aes(x=first_appearance,fill=regions))+geom_bar(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions)
 ggsave("../pdfs/first_appearance.pdf",width=10)
+
 # What fraction of the regions appear for the first time at this timepoint?
 new_bool<-data_exp$when==data_exp$first_appearance
 new<-ifelse(new_bool,ifelse(data_exp$regions=="gene_start", "new (gene_start)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),"old")
@@ -115,8 +115,16 @@ new<-ifelse(new_bool,ifelse(data_exp$regions=="gene_start", "new (gene_start)", 
 new<-factor(new,c("new (gene_start)","old (gene_start)","new (gene body)","old (gene body)", "new (non gene)", "old (non gene)"))
 data_new<-cbind(data_exp,new)
 new_cols<-c(region_cols[1],"firebrick4",region_cols[2],"orange3",region_cols[3],"turquoise4")
-ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="dodge")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Number of regions  at this timepoint")+xlab("Timepoint")
+#new_cols<-c(region_cols[1],"orange3",region_cols[2],"turquoise4")
+ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="stack")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Number of regions  at this timepoint")+xlab("Timepoint")
 ggsave("../pdfs/total_regions.pdf",width=10)
+
+new_gb<-subset(data_new,new=="new (gene body)")
+old_gb<-subset(data_new,new=="old (gene body)")
+old_gs<-subset(data_new,new=="old (gene_start)")
+new_gs<-subset(data_new,new=="new (gene_start)")
+old_ng<-subset(data_new,new=="old (non gene)")
+new_ng<-subset(data_new,new=="new (non gene)")
 
 # Region sizes
 cat("visualisation.r: Region sizes!\n")
@@ -141,29 +149,23 @@ cat("visualisation.r: Distance to closest gene_start!\n")
 distance<-data_exp$distance
 regions_exp<-data_exp$regions
 when<-data_exp$when
-dist_dat_pre<-data.frame(distance,regions_exp,when)
-dist_dat<-dist_dat_pre[dist_dat_pre$regions_exp!="gene_start",]
+dist_dat<-data.frame(distance,regions_exp,when,new_bool)
 affected<-dist_dat$distance<time_thresh[dist_dat$when]
 thresh<-ifelse(affected,"area cleared by FP treatment",ifelse(dist_dat$regions_exp=="gene_body","unaffected (gene body)","unaffected (non gene)"))
 thresh_cols<-c("darkorchid1",region_cols[2],region_cols[3])
 dist_dat<-cbind(dist_dat,thresh)
-names(dist_dat)<-c("distance","regions","when","thresh")
-ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(0,25000)
+names(dist_dat)<-c("distance","regions","when","new","thresh")
+dist_dat<-subset(dist_dat,regions!="gene_start")
+cat("Specifying dist_dat to only new hits...\n")
+dist_dat<-subset(dist_dat,new_bool)
+
+ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free")+xlim(0,25000)
 ggsave("../pdfs/region_distance.pdf",width=10)
-ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free",space="free")+xlim(5000,100000)
+ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free")+xlim(5000,100000)
 ggsave("../pdfs/region_distance_5kon.pdf",width=10)
-ggplot(dist_dat,aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance to closest gene_start (either direction) (gene body and non-gene)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
+ggplot(subset(dist_dat,regions_exp=="gene_body"),aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance from gene start to gene-body (possible) enhancer (mESC)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
+#ggplot(subset(dist_dat,regions_exp=="gene_body"),aes(x=distance))+geom_histogram(fill="gray",binwidth=500)+mytheme+ggtitle("Distance to closest gene_start (either direction) (gene body and non-gene)")+xlab("Distance")+ylab("Counts")+xlim(0,25000)
 ggsave("../pdfs/all_distance.pdf",width=10)
-
-# dREG scores
-#cat("make_histograms.r: dREG scores!\n")
-#dREG_preds<-read.table(paste(folder,name,".scores.txt",sep=""))
-#scores<-dREG_preds[,1]
-#thresh<-ifelse(scores>0.8,"over","under")
-
-#score_dat<- data.frame(scores,thresh)
-#qplot(scores,data=score_dat,geom="histogram",fill=thresh)+theme_bw()
-#ggsave(paste(folder,name,".dREG_scores.pdf",sep=""))
 
 # Gene-focused analysis
 #gene_only_hits<-read.table('/Users/stephanie/ll/data/genes/lists/dREG_IDs_onlybody.txt')
