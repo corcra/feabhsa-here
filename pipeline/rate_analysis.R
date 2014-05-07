@@ -18,12 +18,18 @@ all<-data.frame(all,time)
 ggplot(all,aes(x=transition/1000,fill=time))+geom_histogram(binwidth=2)+facet_grid(time~.,scales="free")+xlab("transition point (kb)")+theme_bw()+scale_fill_manual(values=rainbow(4,v=0.8,s=0.5))
 ggsave("transitions.pdf")
 
+# --- comparison data --- #
+comp_folder<-'/Users/stephanie/ll/from_hojoong/regression/data/'
+comp_rates<-read.table(paste0(comp_folder,'level-rate.txt'),header=T)
+comp_rates<-subset(comp_rates,rate>0)
+
 # --- other covariates --- #
 covar_folder<-paste0('/Users/stephanie/ll/results/rate_analysis/',time_point,'/')
 n_gb<-read.table(paste0(covar_folder,'n_gb.txt'),header=T)
 int1len<-read.table(paste0(covar_folder,'int1len.txt'),header=T)
 n_exon<-read.table(paste0(covar_folder,'n_exon.txt'),header=T)
-#
+
+
 # --- functions --- #
 get_rate<-function(from,to,timediff){
     # note, the name field should be the second one...
@@ -47,7 +53,6 @@ roz<-function(d)
 }
 
 add_covars<-function(data,n_gb,int1len,n_exon){
-    print("Adding covariates!")
     data<-merge(data,n_gb,by.x=4,by.y=1)
     data<-merge(data,int1len,by=1)
     data<-merge(data,n_exon,by=1)
@@ -73,8 +78,15 @@ if (time_point=="early"){
     print("what timepoint did you give me? :(")
     quit("no")
 }
-
+cat(nrow(data),"genes at",time_point,"time point.\n")
 # --- combine the covariates --- #
 data_covar<-add_covars(data,n_gb,int1len,n_exon)
+cat(nrow(data_covar),"genes with covar data.\n")
 
 # --- do comparisons --- #
+in_theirs<-merge(data_covar,comp_rates,by=1)
+cat(nrow(in_theirs),"genes overlap with previous results.\n")
+cat("Correlation:",cor(in_theirs$rate.x,in_theirs$rate.y),"\n")
+
+new<-!data_covar$name%in%comp_rates$geneID
+data_new<-subset(data_covar,new)
