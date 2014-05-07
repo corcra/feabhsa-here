@@ -98,7 +98,6 @@ echo "Running HMM!"
 sort -k4,4 $genes_preformatted > genes.temp
 # sort the result-list, then perform a join on the genename field... the result should be the addition of two columns - first is the number of dREG hits in the gene start region, second is number of hits in the gene body ... we can use this for later analysis!
 sort -k2,2 $result | join -1 2 -2 4 - genes.temp  > res.temp
-#| awk 'BEGIN{OFS="\t"}{ print $2, $1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12 }' > $result.temp
 
 # --- do some QC! --- #
 # rounds = 200, kick it out
