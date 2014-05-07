@@ -2,7 +2,8 @@
 
 args<-commandArgs(TRUE)
 # Options
-consistent<-TRUE
+no_violations<-FALSE
+at_least_twice<-TRUE
 
 # Data?
 suffix<-"40m_SVM"           # 40m_SVM or full_SVM
@@ -35,11 +36,17 @@ get_violations<-function(df){
 data<-read.table(inpath,header=T,na.strings="NAN")
 
 # Apply filters, etc.
-if (consistent){
-    print("Restricting to consistent hits!")
+if (no_violations){
+    print("Restricting to hits with no violations!")
     violations<-get_violations(data[,time_points])
-    consistent<-violations<=1
-    data_cons<-subset(data,consistent==TRUE)
+    no_violations<-violations==0
+    data_cons<-subset(data,no_violations==TRUE)
+}
+
+if (at_least_twice){
+    print("Restricting to hits appearing at least twice!")
+    num_appearances<-rowSums(data[,time_points])
+    data_cons<-subset(data,num_appearances>=2)
 }
 
 write.table(data_cons,file=outpath,quote=F,row.names=F,sep="\t")
