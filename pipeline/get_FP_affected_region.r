@@ -17,9 +17,10 @@ starts<-ifelse(both$strand=="+",floor(both$gene_start.x+both$transition.x),floor
 ends<-ifelse(both$strand=="+",ceiling(both$gene_start.x+both$transition.y),ceiling(both$gene_start.x-both$transition.x))
 chr<-both$chr.x
 name<-both$name
+filler<-rep("NA",length(name))
 
 # combinate
-region<-data.frame(chr,starts,ends,name)
+region<-data.frame(chr,starts,ends,name,filler)
 region<-subset(region,ends>starts)
 
 # save
