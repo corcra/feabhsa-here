@@ -110,7 +110,7 @@ echo $[`wc -l res2.temp | awk '{ print $1 }'` - `wc -l res3.temp | awk '{print $
 awk '{ if ($5!=2*'$binsize') print $0 }' res3.temp > res4.temp
 echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had transition == 2*binsize - removed." >> $logfile
 # density1 > density2, kick it out
-awk '{ if ($6<$7) print $0 }' res4.temp > res5.temp
+awk '{ if ($6<0.5*$7) print $0 }' res4.temp > res5.temp
 echo $[`wc -l res4.temp | awk '{ print $1 }'` - `wc -l res5.temp | awk '{print $1}'`] "genes had density1 > density2 - removed." >> $logfile
 # transition overlap with a dREG hit? kick it out
 awk '{ if (12=="+") { print $8, $9+3,$9+3+1,$1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} else { print $8, $10-$3-1, $10-$3, $1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} }' res5.temp | sort-bed - > res.bed.temp
