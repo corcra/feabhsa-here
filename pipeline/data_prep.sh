@@ -51,10 +51,13 @@ do
     low_pos=$results/$datatype\_$datatime.pos.$THRE_low.bedGraph.gz
 
     # What is the score distribution? (can plot this later as necessary)
-    echo "Getting scores."
-    bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $gene_start | gzip -c > ${preds/.predictions/.gs.predictions}
-    bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $gene_body | gzip -c > ${preds/.predictions/.gb.predictions}
-    bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $non_gene | gzip -c > ${preds/.predictions/.ng.predictions}
+    if ! [ -a ${preds/.predictions/.gs.predictions} ]
+    then
+        echo "Getting scores."
+        bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $gene_start | gzip -c > ${preds/.predictions/.gs.predictions}
+        bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $gene_body | gzip -c > ${preds/.predictions/.gb.predictions}
+        bedmap --fraction-ref 0.5 --echo --skip-unmapped $preds.temp $non_gene | gzip -c > ${preds/.predictions/.ng.predictions}
+    fi
 
     # Expands positive regions into window +-50, merges these.
     echo "Getting high-confidence regions."
@@ -147,6 +150,8 @@ python post_bedtools_join_closest.py dist_pre_high.temp dist_high.temp
 bedtools closest -d -a pred_low.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-2), $NF, $(NF-1) }' > dist_pre_low.temp
 python post_bedtools_join_closest.py dist_pre_low.temp dist_low.temp
 # (creates dist_high.temp and dist_low.temp)
+
+exit
 
 # Get histone counts! (totally unnormalised here...)
 echo "Getting histone counts."
