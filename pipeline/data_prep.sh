@@ -149,8 +149,6 @@ bedtools closest -d -a pred_high.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}
 bedtools closest -d -a pred_low.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-2), $NF, $(NF-1) }' | python post_bedtools_join_closest.py > dist_low.temp
 # (creates dist_high.temp and dist_low.temp)
 
-exit
-
 # Get histone counts! (totally unnormalised here...)
 echo "Getting histone counts."
 gunzip -c $H3K4me1 | bedmap --delim '\t' --range 500 --sum pred_high.temp - > H3K4me1_high.temp
@@ -175,15 +173,15 @@ R --slave --file=QC.r --args $pre_QC_confident m.temp
 gzip -c m.temp > $confident
 
 echo "Dividing results into regions, for visualisation." # (this used to be 'extract_regions'
-awk 'BEGIN{OFS="\t"}{ if ($13==1) print $1,$2,$3,$4,$16,$18 }' m.temp | sed '1d'  > $results/metaplot/dREG_gs.bed
-awk 'BEGIN{OFS="\t"}{ if (($14!=0)&&($17>2000)) print $1,$2,$3,$4,$16,$18 }' m.temp | sed '1d'  > $results/metaplot/dREG_gb.bed
+awk 'BEGIN{OFS="\t"}{ if ($13==1) print $1,$2,$3,$4,$16,$18 }' m.temp | sed '1d' | sed '/+;-/d' > $results/metaplot/dREG_gs.bed
+awk 'BEGIN{OFS="\t"}{ if (($14!=0)&&($17>2000)) print $1,$2,$3,$4,$16,$18 }' m.temp | sed '1d'| sed '/+;-/d'  > $results/metaplot/dREG_gb.bed
 # non-genes don't have strands!
-awk 'BEGIN{OFS="\t"}{ if ($15==1) print $1,$2,$3,$4,$16 }' m.temp | sed '1d' > $results/metaplot/dREG_ng.bed
+awk 'BEGIN{OFS="\t"}{ if ($15==1) print $1,$2,$3,$4,$16 }' m.temp | sed '1d' | sed '/+;-/d' > $results/metaplot/dREG_ng.bed
 
 # -- now for low... (will remove this after sanity checks, I think) ...
-awk 'BEGIN{OFS="\t"}{ if ($13==1) print $1,$2,$3,$4,$16,$18 }' comb_low.temp > $results/metaplot/dREG_maybe_gs.bed
-awk 'BEGIN{OFS="\t"}{ if (($14!=0)&&($17>2000)) print $1,$2,$3,$4,$16,$18 }' comb_low.temp > $results/metaplot/dREG_maybe_gb.bed
-awk 'BEGIN{OFS="\t"}{ if ($15==1) print $1,$2,$3,$4,$16 }' comb_low.temp  > $results/metaplot/dREG_maybe_ng.bed
+awk 'BEGIN{OFS="\t"}{ if ($13==1) print $1,$2,$3,$4,$16,$18 }' comb_low.temp| sed '/+;-/d' > $results/metaplot/dREG_maybe_gs.bed
+awk 'BEGIN{OFS="\t"}{ if (($14!=0)&&($17>2000)) print $1,$2,$3,$4,$16,$18 }' comb_low.temp | sed '/+;-/d' > $results/metaplot/dREG_maybe_gb.bed
+awk 'BEGIN{OFS="\t"}{ if ($15==1) print $1,$2,$3,$4,$16 }' comb_low.temp  | sed '/+;-/d' > $results/metaplot/dREG_maybe_ng.bed
 
 # --- Create a log file of what just happened --- #
 echo `date` > $results/logfile.txt
