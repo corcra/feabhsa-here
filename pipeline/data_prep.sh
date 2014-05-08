@@ -145,10 +145,8 @@ bedmap --fraction-ref 0.5 --indicator pred_low.temp $non_gene > non_gene_low.tem
 
 # Get the distance to the nearest gene_start... (for all hits!) (modify the master)
 echo "Getting distance to closest gene start."
-bedtools closest -d -a pred_high.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-2), $NF, $(NF-1) }' > dist_pre_high.temp
-python post_bedtools_join_closest.py dist_pre_high.temp dist_high.temp
-bedtools closest -d -a pred_low.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-2), $NF, $(NF-1) }' > dist_pre_low.temp
-python post_bedtools_join_closest.py dist_pre_low.temp dist_low.temp
+bedtools closest -d -a pred_high.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-2), $NF, $(NF-1) }' | python post_bedtools_join_closest.py > dist_high.temp
+bedtools closest -d -a pred_low.temp -b gene_starts.temp | awk 'BEGIN{OFS="\t"}{ print $4, $(NF-2), $NF, $(NF-1) }' | python post_bedtools_join_closest.py > dist_low.temp
 # (creates dist_high.temp and dist_low.temp)
 
 exit
