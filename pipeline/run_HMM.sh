@@ -2,7 +2,7 @@
 
 #suffix=full_SVM      # eg full_SVM, 40m_SVM...
 suffix=40m_SVM      # eg full_SVM, 40m_SVM...
-
+version=B           # eg B, C, V6.5, etc...
 THRE_high=0.8
 
 hmm_dir=/Users/stephanie/ll/from_hojoong
@@ -20,7 +20,7 @@ then
     binsize=500
 fi
 
-if [ $time == "12.5" ]
+if [ $time == "12.5" ] || [ $time == "1230" ]
 then
     thre=30000
     binsize=1000
@@ -39,21 +39,21 @@ then
 fi
 
 genelist=$hmm_dir/list/genes_over$thre.txt
-logfile=$hmm_dir/result/V6.5_$time\min_bin$binsize.$suffix.logfile.txt
+logfile=$hmm_dir/result/$version\_$time\min_bin$binsize.$suffix.logfile.txt
 
 echo `date` > $logfile
 echo "Suffix is" $suffix >> $logfile
 echo "Using threshold of" $thre "and binsize of" $binsize "because time is" $time"." >> $logfile
 
-bg_plus=$bg_dir/V6.5_$1\minFP_Plus.bedGraph
-bg_minus=$bg_dir/V6.5_$1\minFP_Minus.bedGraph
+bg_plus=$bg_dir/$version_$1\minFP_Plus.bedGraph
+bg_minus=$bg_dir/$version_$1\minFP_Minus.bedGraph
 
-bi_plus=$hmm_dir/bi/V6.5_$time\min.p.bi
-bi_minus=$hmm_dir/bi/V6.5_$time\min.m.bi
-bi0_plus=$hmm_dir/bi/V6.5_0min.p.bi
-bi0_minus=$hmm_dir/bi/V6.5_0min.m.bi
+bi_plus=$hmm_dir/bi/$version\_$time\min.p.bi
+bi_minus=$hmm_dir/bi/$version\_$time\min.m.bi
+bi0_plus=$hmm_dir/bi/$version\_0min.p.bi
+bi0_minus=$hmm_dir/bi/$version\_0min.m.bi
 
-result=$hmm_dir/result/V6.5_$time\min_bin$binsize.$suffix.txt
+result=$hmm_dir/result/$version\_$time\min_bin$binsize.$suffix.txt
 
 # --- prepare the genelist --- #
 if ! [ -a $genelist ]
@@ -90,6 +90,7 @@ fi
 
 # --- run the HMM --- #
 echo "Running HMM!"
+echo "Options: -o $result -p $bi_plus -m $bi_minus -p0 $bi0_plus -m0 $bi0_minus -b $binsize -g $genelist -c list/mm9chr.txt"
 ./code/hmm2 -o $result -p $bi_plus -m $bi_minus -p0 $bi0_plus -m0 $bi0_minus -b $binsize -g $genelist -c list/mm9chr.txt
 
 # --- check for gene-body enhancers --- #
@@ -111,7 +112,7 @@ awk '{ if ($5!=2*'$binsize') print $0 }' res3.temp > res4.temp
 echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had transition == 2*binsize - removed." >> $logfile
 # density1 > density2, kick it out
 awk '{ if ($6<0.5*$7) print $0 }' res4.temp > res5.temp
-echo $[`wc -l res4.temp | awk '{ print $1 }'` - `wc -l res5.temp | awk '{print $1}'`] "genes had density1 > density2 - removed." >> $logfile
+echo $[`wc -l res4.temp | awk '{ print $1 }'` - `wc -l res5.temp | awk '{print $1}'`] "genes had density1 > 0.5*density2 - removed." >> $logfile
 # transition overlap with a dREG hit? kick it out
 awk '{ if (12=="+") { print $8, $9+3,$9+3+1,$1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} else { print $8, $10-$3-1, $10-$3, $1,$12,$2,$3,$4,$5,$6,$7,$9,$10,$13,$14} }' res5.temp | sort-bed - > res.bed.temp
 gunzip -c $dREG_list | sed '1d' | bedmap --range $binsize --echo --indicator res.bed.temp - | grep '|0' | awk 'BEGIN{FS="|"}{print $1}' > res2.bed.temp
