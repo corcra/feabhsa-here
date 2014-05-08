@@ -17,12 +17,12 @@ for line in sys.stdin:
         gene_buffer.append(gene)
         strand_buffer.add(strand)
     else:
-        buffered_line=';'.join(gene_buffer)+'\t'+distance_buffer+'\t'+';'.join(strand_buffer)+'\n'
+        buffered_line=';'.join(gene_buffer)+'\t'+distance_buffer+'\t'+';'.join(strand_buffer)
         print buffered_line
         gene_buffer=[gene]
         current_ID = ID
         distance_buffer = distance
         strand_buffer = {strand}
 
-buffered_line=';'.join(gene_buffer)+'\t'+distance_buffer+'\t'+strand+'\n'
+buffered_line=';'.join(gene_buffer)+'\t'+distance_buffer+'\t'+strand
 print buffered_line
