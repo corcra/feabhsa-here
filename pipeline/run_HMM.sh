@@ -2,7 +2,10 @@
 
 #suffix=full_SVM      # eg full_SVM, 40m_SVM...
 suffix=40m_SVM      # eg full_SVM, 40m_SVM...
-version=C           # eg B, C, V6.5, etc...
+#version=C           # eg B, C, V6.5, etc...
+#version=B           # eg B, C, V6.5, etc...
+#version=R           # eg B, C, V6.5, etc...
+version=V6.5
 THRE_high=0.8
 
 hmm_dir=/Users/stephanie/ll/from_hojoong
@@ -96,43 +99,44 @@ echo "Ran HMM with options: -o $result -p $bi_plus -m $bi_minus -p0 $bi0_plus -m
 
 # --- do some QC! --- #
 # add back the gene strand info ... resulting columns are NAME, GID, LEN, ROUNDS, TRANSITION, DENSITY1, DENSITY2, STRAND, CHR, START, END
-sort -k2,2 $result > res_sort.temp
-sort -k2,2 $genelist | awk '{ print $2, $5, $4, $6, $7 }' | join -1 2 -2 1 res_sort.temp - > res.temp
+sort -k2,2 $result > res_sort.$version.$time.temp
+sort -k2,2 $genelist | awk '{ print $2, $5, $4, $6, $7 }' | join -1 2 -2 1 res_sort.$version.$time.temp - > res.$version.$time.temp
 
 # rounds = 200, kick it out
-awk '{ if ($4!=200) print $0 }' res.temp > res2.temp
-echo $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.temp | awk '{print $1}'`] "genes had >200 rounds - removed." >> $logfile
+awk '{ if ($4!=200) print $0 }' res.$version.$time.temp > res2.$version.$time.temp
+echo $[`wc -l res.$version.$time.temp | awk '{ print $1 }'` - `wc -l res2.$version.$time.temp | awk '{print $1}'`] "genes had >200 rounds - removed." >> $logfile
 
 # transition > len, kick it out
-awk '{ if ($5<$3) print $0 }' res2.temp > res3.temp
-echo $[`wc -l res2.temp | awk '{ print $1 }'` - `wc -l res3.temp | awk '{print $1}'`] "genes had transition > len - removed." >> $logfile
+awk '{ if ($5<$3) print $0 }' res2.$version.$time.temp > res3.$version.$time.temp
+echo $[`wc -l res2.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.$version.$time.temp | awk '{print $1}'`] "genes had transition > len - removed." >> $logfile
 
 # transition == 2*binsize, kick it out
-awk '{ if ($5!=2*'$binsize') print $0 }' res3.temp > res4.temp
-echo $[`wc -l res3.temp | awk '{ print $1 }'` - `wc -l res4.temp | awk '{print $1}'`] "genes had transition == 2*binsize - removed." >> $logfile
+awk '{ if ($5!=2*'$binsize') print $0 }' res3.$version.$time.temp > res4.$version.$time.temp
+echo $[`wc -l res3.$version.$time.temp | awk '{ print $1 }'` - `wc -l res4.$version.$time.temp | awk '{print $1}'`] "genes had transition == 2*binsize - removed." >> $logfile
 
 # density1 > density2, kick it out
-awk '{ if ($6<0.5*$7) print $0 }' res4.temp > res5.temp
-echo $[`wc -l res4.temp | awk '{ print $1 }'` - `wc -l res5.temp | awk '{print $1}'`] "genes had density1 > 0.5*density2 - removed." >> $logfile
+awk '{ if ($6<0.5*$7) print $0 }' res4.$version.$time.temp > res5.$version.$time.temp
+echo $[`wc -l res4.$version.$time.temp | awk '{ print $1 }'` - `wc -l res5.$version.$time.temp | awk '{print $1}'`] "genes had density1 > 0.5*density2 - removed." >> $logfile
 
 # transition involves scientific notation, kick it out
-grep -v "e" res5.temp > res6.temp
-echo $[`wc -l res5.temp | awk '{ print $1 }'` - `wc -l res6.temp | awk '{print $1}'`] "genes had scientific notation in their transition - removed." >> $logfile
+grep -v "e" res5.$version.$time.temp > res6.$version.$time.temp
+echo $[`wc -l res5.$version.$time.temp | awk '{ print $1 }'` - `wc -l res6.$version.$time.temp | awk '{print $1}'`] "genes had scientific notation in their transition - removed." >> $logfile
 
 # transition overlap with a dREG hit? kick it out
 # make beddy, e.g. CHR, TRANSITION_START, TRANSITION_END, STRAND, GID, NAME, LEN, ROUNDS, TRANSITION, DENSITY1, DENSITY2, GENE_START, GENE_END
-awk '{ if ($8=="+") {{ printf "%s %i %i ", $9, $10+$5, $10+$5+1} { print $8, $1, $2, $3, $4, $5, $6, $7, $10, $11 }} else  {{ printf "%s %i %i ", $9, $11-$3-1, $11-$3} { print $8, $1, $2, $3, $4, $5, $6, $7, $10, $11 }}}' res6.temp | sort-bed - > res.bed.temp
-gunzip -c $dREG_list | sed '1d' | bedmap --range $binsize --echo --indicator res.bed.temp - | grep '|0' | awk 'BEGIN{FS="|"}{print $1}' > res2.bed.temp
-echo $[`wc -l res.bed.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed." >> $logfile
+awk '{ if ($8=="+") {{ printf "%s %i %i ", $9, $10+$5, $10+$5+1} { print $8, $1, $2, $3, $4, $5, $6, $7, $10, $11 }} else  {{ printf "%s %i %i ", $9, $11-$3-1, $11-$3} { print $8, $1, $2, $3, $4, $5, $6, $7, $10, $11 }}}' res6.$version.$time.temp | sort-bed - > res.bed.$version.$time.temp
+gunzip -c $dREG_list | sed '1d' | bedmap --range $binsize --echo --indicator res.bed.$version.$time.temp - > res2.bed.$version.$time.temp
+grep '|0' res2.bed.$version.$time.temp | awk 'BEGIN{FS="|"}{print $1}' > res3.bed.$version.$time.temp
+echo $[`wc -l res.bed.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.bed.$version.$time.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed." >> $logfile
 
-echo "Overall," $[`wc -l res.temp | awk '{ print $1 }'` - `wc -l res2.bed.temp | awk '{print $1}'`] "genes removed for QC." >> $logfile
+echo "Overall," $[`wc -l res.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.bed.$version.$time.temp | awk '{print $1}'`] "genes removed for QC." >> $logfile
 
 # convert it back into something nice (by nice I really just mean 'something along the lines of the output of the HMM'...)
-echo "gid" "name" "len" "rounds" "transition" "density1" "density2" "strand" "chr" "gene_start" "gene_end" > final.temp
-awk 'BEGIN{OFS="\t"}{ print $6, $5, $7, $8, $9, $10, $11, $4, $1, $12, $13 }' res2.bed.temp >> final.temp
+echo "gid" "name" "len" "rounds" "transition" "density1" "density2" "strand" "chr" "gene_start" "gene_end" > final.$version.$time.temp
+awk 'BEGIN{OFS="\t"}{ print $6, $5, $7, $8, $9, $10, $11, $4, $1, $12, $13 }' res3.bed.$version.$time.temp >> final.$version.$time.temp
 
-echo "After QC, there are" `wc -l final.temp| awk '{ print $1 }'` "genes remaining." >> $logfile
-#mv final.temp $result
+echo "After QC, there are" `wc -l final.$version.$time.temp| awk '{ print $1 }'` "genes remaining." >> $logfile
+mv final.$version.$time.temp $result
 
 # --- Tidy! --- #
-#rm *.temp
+#rm *$version.$time.temp

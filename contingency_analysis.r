@@ -39,10 +39,10 @@ influenced_by_FP<-function(data,time_points,nt,t){
     d<-data[((data$"gene_body"!=0)&(data[,time_points[t+1]]==1)&(data$"distance"!=0)),]
     #d<-data[((data$"gene_body"!=0)&(data[,time_points[t+1]]==1)),]
 
-    #wt_inf<-sum((d[,time_points[1]]==1)&(d$"distance"<=time_thresh[time_points[t+1]]))
-    #wt_ninf<-sum((d[,time_points[1]]==1)&(d$"distance">time_thresh[time_points[t+1]]))
-    #nwt_inf<-sum((d[,time_points[1]]==0)&(d$"distance"<=time_thresh[time_points[t+1]]))
-    #nwt_ninf<-sum((d[,time_points[1]]==0)&(d$"distance">time_thresh[time_points[t+1]]))
+#    wt_inf<-sum((d[,time_points[1]]==1)&(d$"distance"<=time_thresh[time_points[t+1]]))
+#    wt_ninf<-sum((d[,time_points[1]]==1)&(d$"distance">time_thresh[time_points[t+1]]))
+#    nwt_inf<-sum((d[,time_points[1]]==0)&(d$"distance"<=time_thresh[time_points[t+1]]))
+#    nwt_ninf<-sum((d[,time_points[1]]==0)&(d$"distance">time_thresh[time_points[t+1]]))
     
     wt_inf<-sum((rowSums(cbind(rep(0,nrow(d)),d[,time_points[1:t]]))!=0)&(d$"distance"<=time_thresh[time_points[t+1]]))
     wt_ninf<-sum((rowSums(cbind(rep(0,nrow(d)),d[,time_points[1:t]]))!=0)&(d$"distance">time_thresh[time_points[t+1]]))
@@ -52,9 +52,9 @@ influenced_by_FP<-function(data,time_points,nt,t){
     contingency.table<-matrix(c(wt_inf,nwt_inf,wt_ninf,nwt_ninf),2,2,byrow=TRUE)
     return(contingency.table)
 }
-#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
+datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
 #datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_maybe_0.5.bed.gz'
-datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_preQC_0.8.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_preQC_0.8.bed.gz'
 
 data<-read.table(datapath,header=T)
 
@@ -103,7 +103,7 @@ for (t in seq(nt-1)){
     ng.pvals[time_points[t+1]]<-pval
     ng.tables[[time_points[t+1]]]<-ng.contingency.table
 
-    fp.contingency.table<-influenced_by_FP(data,time_points,nt,t)
+    fp.contingency.table<-influenced_by_FP(subset(data,gene_body!=0),time_points,nt,t)
     chisq.result<-chisq.test(fp.contingency.table)
     stat<-chisq.result$statistic
     pval<-chisq.result$p.value

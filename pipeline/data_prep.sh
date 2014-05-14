@@ -26,7 +26,7 @@ proc_high=$results/dREG_regions_proc_$THRE_high.bed.gz
 pre_QC_confident=$results/dREG_regions_preQC_$THRE_high.bed.gz
 confident=$results/dREG_regions_confident_$THRE_high.bed.gz
 # --- uncertain ---
-raw_low=$results/dREG_regions_maybe_$THRE_low.bed.gz
+raw_low=$results/dREG_regions_maybe_raw_$THRE_low.bed.gz
 proc_low=$results/dREG_regions_maybe_proc_$THRE_low.bed.gz
 maybe=$results/dREG_regions_maybe_$THRE_low.bed.gz
 
@@ -41,11 +41,19 @@ H3K4me1=$data/ChIPseq/H3K4me1_Meiss.sorted.bed.gz
 H3K4me3=$data/ChIPseq/H3K4me3_Marson.sorted.bed.gz
 H3K27ac=$data/ChIPseq/H3K27Ac.sorted.bed.gz
 
+# Mappability
+mappable=$data/mappability/mm9map.bedgraph
+
+# --- Let's do this! --- #
 for datatime in 0min 2min 5min 12.5min 25min 50min
 do
     echo "Encorporating" $datatime
     # Set up vars
     preds=$folder/$datatype\_$datatime.predictions.bedGraph.gz
+
+    # remove multiply-mapped regions
+    # using map-id seems weird, but in the bedgraph the value goes in the fourth column
+    gunzip -c $preds | bedmap --skip-unmapped --echo --echo-map-id - $mappable | awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' > $preds.temp
     gunzip -c $preds > $preds.temp
     high_pos=$results/$datatype\_$datatime.pos.$THRE_high.bedGraph.gz
     low_pos=$results/$datatype\_$datatime.pos.$THRE_low.bedGraph.gz
@@ -166,7 +174,7 @@ paste pred_high.temp gene_start_high.temp gb_high.temp non_gene_high.temp dist_h
 cat headerfile.temp comb_high.temp | gzip -c > $pre_QC_confident
 
 paste pred_low.temp gene_start_low.temp gb_low.temp non_gene_low.temp dist_low.temp H3K4me1_low.temp H3K4me3_low.temp H3K27ac_low.temp > comb_low.temp
-cat headerfile.temp comb_low.temp | gzip -c > $maybe
+cat headerfile.temp comb_low.temp | gzip -cv > $maybe
 
 echo "Doing quality control!"
 R --slave --file=QC.r --args $pre_QC_confident m.temp
@@ -194,7 +202,7 @@ echo "# Low confidence regions:" `wc -l comb_low.temp | awk '{ print $1 }'` >> $
 
 # --- Clean up ---- #
 echo "Tidying up!"
-rm -v *.temp
+#rm -v *.temp
 rm -v $raw_high
 rm -v $raw_low
 rm -v $proc_high

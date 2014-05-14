@@ -7,8 +7,8 @@ source('vis_fns.r')
 args<-commandArgs(TRUE)
 #datapath<-args[1]
 datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
-#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_maybe_0.5.bed.gz'
 #datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_preQC_0.8.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_maybe_0.5.bed.gz'
 #datapath<-'/Users/stephanie/ll/data/known_enhancers/dREG_known.bed.gz'
 #datapath<-'/Users/stephanie/ll/data/known_enhancers/dREG_known_active.bed.gz'
 fakedatapath<-'/Users/stephanie/ll/results/fake/fake_marked.bed.gz'
@@ -50,7 +50,7 @@ cat("visualisation.r: How often is each region seen?\n")
 howmany_prefac<-rowSums(data[,time_points])
 howmany<-factor(howmany_prefac,c(1,2,3,4,5,6))
 data_howfreq<-data.frame(regions,howmany,first_appearance)
-ggplot(data_howfreq,aes(x=howmany,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("How many timepoints do hits occur in?")+xlab("Number of timepoints")+facet_grid(~regions,margins=TRUE)
+ggplot(data_howfreq,aes(x=howmany,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+ggtitle("How many timepoints do hits occur in?")+xlab("Number of timepoints")+facet_grid(~regions,margins=FALSE)
 ggsave("../pdfs/repetition_regions.pdf",width=10)
 
 #How consistent are they?
@@ -156,8 +156,8 @@ thresh_cols<-c("darkorchid1",region_cols[2],region_cols[3])
 dist_dat<-cbind(dist_dat,thresh)
 names(dist_dat)<-c("distance","regions","when","new","thresh")
 dist_dat<-subset(dist_dat,regions!="gene_start")
-cat("Specifying dist_dat to only new hits...\n")
-dist_dat<-subset(dist_dat,new_bool)
+#cat("Specifying dist_dat to only new hits...\n")
+#dist_dat<-subset(dist_dat,new_bool)
 
 ggplot(dist_dat,aes(x=distance,fill=thresh))+geom_histogram(binwidth=250)+mytheme+scale_fill_manual(values=thresh_cols)+ggtitle("Distance to closest gene_start (either direction)")+xlab("Distance (bp)")+ylab("Counts")+facet_grid(when~regions,margins=FALSE,scale="free")+xlim(0,25000)
 ggsave("../pdfs/region_distance.pdf",width=10)

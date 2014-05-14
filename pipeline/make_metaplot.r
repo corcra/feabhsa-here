@@ -84,6 +84,6 @@ if (file.exists(paste0(filename,".txt"))){
 }
 
 cat("make_metaplot.r: data constructed! Ready to plot.\n")
-ggplot(dl,aes(x=d,y=lv,colour=col))+geom_point(cex=0.5,show_guide=FALSE)+mytheme+xlab("Distance to centre (bp)")+ylab("Average normalised GRO-seq signal")+ggtitle(paste0("Metagene plot (",datatype,", ",datatime,", ",titleinfo,")"))+scale_colour_manual(values=c("blue","red"))+geom_ribbon(aes(ymin=lq_p,ymax=uq_p),alpha=0.5,fill="red",colour=NA)+geom_ribbon(aes(ymin=lq_m,ymax=uq_m),alpha=0.5,fill="blue",colour=NA)+geom_line(y=0,linetype="dashed",show_guide=FALSE,colour="black")+ylim(-0.004,0.007)+geom_line(x=0,linetype="dashed",show_guide=FALSE,colour="black")
+ggplot(dl,aes(x=d,y=lv,colour=col))+geom_point(cex=0.5,show_guide=FALSE)+mytheme+xlab("Distance to centre (bp)")+ylab("Average normalised GRO-seq signal")+ggtitle(paste0("Metagene plot (",datatype,", ",datatime,", ",titleinfo,")"))+scale_colour_manual(values=c("blue","red"))+geom_ribbon(aes(ymin=lq_p,ymax=uq_p),alpha=0.5,fill="red",colour=NA)+geom_ribbon(aes(ymin=lq_m,ymax=uq_m),alpha=0.5,fill="blue",colour=NA)+geom_abline(intercept=0,slope=0,linetype="dashed")+geom_abline(intercept=0,slope=1,linetype="dashed")+ylim(-0.004,0.007)
 cat(paste0("Saving to ",filename,".pdf"),"\n")
 ggsave(paste0(filename,".pdf"))

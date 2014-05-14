@@ -21,7 +21,7 @@ get_region_of_relevance<-function(from,to,genes,timepoint){
     filename<-paste0(timepoint,"_region_of_relevance.bed.temp")
     cat("Saving region of relevance to",filename,"\n")
     write.table(region,file=filename,row.names=F,col.names=F,quote=F)
-    cat("Sorting to",timepoint,"_region_of_relevance.bed!")
+    cat("Sorting to",timepoint,"_region_of_relevance.bed!\n")
     system(paste0("sort-bed ",filename," > ",timepoint,"_region_of_relevance.bed"))
 }
 
@@ -38,6 +38,7 @@ plot_transitions<-function(five,twelve,twentyfive,fifty){
 consistent_over_replicates<-function(data_1,data_2,time){
     both<-merge(data_1,data_2,by=2)
     sd<-sqrt(var(both$transition.x-both$transition.y))
+    #sd<-10000000
     if (sd==0){
         cat("Transitions are identical!\n")
         name<-data_1$name

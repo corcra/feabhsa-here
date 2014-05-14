@@ -14,7 +14,11 @@ for line in f:
     gene_ID = line.split()[1]
     chro = line.split()[2]
     strand = line.split()[3]
-    tx_start = line.split()[4]
+    # this looks a bit confusing, but the information is only used for recording the start of the gene
+    if strand=='+':
+        tx_start = line.split()[4]
+    else:
+        tx_start = line.split()[5]
     tx_end = line.split()[5]
     exonCount = int(line.split()[8])
     starts = line.split()[9].strip(',')
@@ -36,14 +40,18 @@ for line in f:
         if strand == '+':
             n_exon = i+1
         else:
-            n_exon = exonCount - i
+            n_exon = exonCount - i -1
         exon = exon_pairs[i]
         exonic_newline = chro+'\t'+exon[0]+'\t'+exon[1]+'\t'+gene_ID+'\t'+str(n_exon)+'\t'+strand+'\t'+tx_start+'\n'
         exonic.write(exonic_newline)
 
         intron = intron_pairs[i]
-        intronic_newline = chro+'\t'+intron[0]+'\t'+intron[1]+'\t'+gene_ID+'\t'+str(n_exon-1)+'\t'+strand+'\t'+tx_start+'\n'
+        intronic_newline = chro+'\t'+intron[0]+'\t'+intron[1]+'\t'+gene_ID+'\t'+str(n_exon)+'\t'+strand+'\t'+tx_start+'\n'
         intronic.write(intronic_newline)
     exon = exon_pairs[exonCount-1]
-    exonic_newline = chro+'\t'+exon[0]+'\t'+exon[1]+'\t'+gene_ID+'\t'+str(exonCount)+'\t'+strand+'\t'+tx_start+'\n'
+    if strand=='+':
+        n_exon = exonCount
+    else:
+        n_exon = 1
+    exonic_newline = chro+'\t'+exon[0]+'\t'+exon[1]+'\t'+gene_ID+'\t'+str(n_exon)+'\t'+strand+'\t'+tx_start+'\n'
     exonic.write(exonic_newline)

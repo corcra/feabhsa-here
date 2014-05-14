@@ -12,13 +12,15 @@ version=C
 # --- datasets yo --- #
 covar_folder=/Users/stephanie/ll/results/rate_analysis/$time_region
 genes=/Users/stephanie/ll/results/$suffix/active_genes.bed
-awk '{ print $1, $2, $3, $4, $5,$6 }' $genes > nicegenes.temp
+nicegenes=${genes/.bed/_Rable.bed}
+awk '{ print $1, $2, $3, $4, $5, $6 }' $genes > $nicegenes
 confident=/Users/stephanie/ll/results/$suffix/dREG_regions_confident_$THRE_high.bed.gz
 maybe=/Users/stephanie/ll/results/$suffix/dREG_regions_maybe_$THRE_low.bed.gz
 introns=/Users/stephanie/ll/data/genes/intronic.bed
 exons=/Users/stephanie/ll/data/genes/exonic.bed
 # --- note, using the plus strand for the CpG data, but it doesn't matter... just gives positive values
 CpG=/Users/stephanie/ll/data/ChIPseq/CpG_plus.bedgraph
+H3K79me2=/Users/stephanie/ll/data/ChIPseq/H3K79me2_sorted.bed.gz
 
 if [ $time_region == "early" ]
 then
@@ -39,7 +41,7 @@ then
 fi
 
 # --- create the 'region of relevance' --- #
-R --slave --file=get_FP_affected_region.r --args nicegenes.temp $from $to
+R --slave --file=get_FP_affected_region.r --args $nicegenes $from $to
 sort-bed regions.bed.temp > region_of_relevance.bed
 #awk 'BEGIN{OFS="\t"}{ if ($6=="+") print $1, $2+'"$from"',$2+'"$to"',$4,$5,$6; else  print $1, $3-'"$to"', $3-'"$from"',$4,$5,$6  }' $genes  > region_of_relevance.bed
 

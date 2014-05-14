@@ -13,8 +13,8 @@ names(strand_info)<-c("name","strand")
 both<-merge(both,strand_info,by=1)
 
 # look at the transitions...
-starts<-ifelse(both$strand=="+",floor(both$gene_start.x+both$transition.x),floor(both$gene_start.x-both$transition.y))
-ends<-ifelse(both$strand=="+",ceiling(both$gene_start.x+both$transition.y),ceiling(both$gene_start.x-both$transition.x))
+starts<-ifelse(both$strand=="+",floor(both$gene_start.x+both$transition.x),floor(both$gene_end.x-both$transition.y))
+ends<-ifelse(both$strand=="+",ceiling(both$gene_start.x+both$transition.y),ceiling(both$gene_end.x-both$transition.x))
 chr<-both$chr.x
 name<-both$name
 filler<-rep("NA",length(name))
