@@ -134,7 +134,7 @@ awk '{ if ($8=="+") {{ printf "%s %i %i ", $9, $10+$5, $10+$5+1} { print $8, $1,
 gunzip -c $dREG_list | sed '1d' | bedmap --range $binsize --echo --indicator res.bed.$version.$time.temp - > res2.bed.$version.$time.temp
 grep '|0' res2.bed.$version.$time.temp | awk 'BEGIN{FS="|"}{print $1}' > res3.bed.$version.$time.temp
 echo $[`wc -l res.bed.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.bed.$version.$time.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed." >> $logfile
-grep '|1' res2.bed.$version.$time.temp | awk 'BEGIN{FS="|"}{print $1, "dREG" }' >> lost_in_QC.$version.$time.txt
+grep '|1' res2.bed.$version.$time.temp | awk 'BEGIN{FS="|"}{print $1 }' | awk '{print $5, $6, $7, $8, $9, $10, $11, $4, $1, $12, $13, "dREG" }' >> lost_in_QC.$version.$time.txt
 
 echo "Overall," $[`wc -l res.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.bed.$version.$time.temp | awk '{print $1}'`] "genes removed for QC." >> $logfile
 
