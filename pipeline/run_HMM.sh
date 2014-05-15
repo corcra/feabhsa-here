@@ -149,5 +149,5 @@ mv final.$version.$time.temp $result
 #rm *$version.$time.temp
 
 # --- Format the deleted list --- #
-awk '{ print $9, $10, $11, $2, $1, $8, $3, $4, $5, $6, $7, $12 }' lost_in_QC.$version.$time.txt | sort-bed - > l.txt
-mv l.txt lost_in_QC.$version.$time.txt
+awk '{ print $9, $10, $11, $2, $1, $8, $3, $4, $5, $6, $7, $12 }' lost_in_QC.$version.$time.txt | sort-bed - > lost_in_QC.$version.$time.bed
+rm lost_in_QC.$version.$time.txt
