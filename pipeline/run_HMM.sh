@@ -98,6 +98,7 @@ echo "Ran HMM with options: -o $result -p $bi_plus -m $bi_minus -p0 $bi0_plus -m
 ./code/hmm2 -o $result -p $bi_plus -m $bi_minus -p0 $bi0_plus -m0 $bi0_minus -b $binsize -g $genelist -c list/mm9chr.txt
 
 # --- do some QC! --- #
+echo `date` > lost_in_QC.$version.$time.txt
 # add back the gene strand info ... resulting columns are NAME, GID, LEN, ROUNDS, TRANSITION, DENSITY1, DENSITY2, STRAND, CHR, START, END
 sort -k2,2 $result > res_sort.$version.$time.temp
 sort -k2,2 $genelist | awk '{ print $2, $5, $4, $6, $7 }' | join -1 2 -2 1 res_sort.$version.$time.temp - > res.$version.$time.temp
@@ -105,22 +106,27 @@ sort -k2,2 $genelist | awk '{ print $2, $5, $4, $6, $7 }' | join -1 2 -2 1 res_s
 # rounds = 200, kick it out
 awk '{ if ($4!=200) print $0 }' res.$version.$time.temp > res2.$version.$time.temp
 echo $[`wc -l res.$version.$time.temp | awk '{ print $1 }'` - `wc -l res2.$version.$time.temp | awk '{print $1}'`] "genes had >200 rounds - removed." >> $logfile
+awk '{ if ($4==200) print $0,"rounds" }' res.$version.$time.temp >> lost_in_QC.$version.$time.txt
 
 # transition > len, kick it out
 awk '{ if ($5<$3) print $0 }' res2.$version.$time.temp > res3.$version.$time.temp
 echo $[`wc -l res2.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.$version.$time.temp | awk '{print $1}'`] "genes had transition > len - removed." >> $logfile
+awk '{ if ($5>=$3) print $0, "transition>len" }' res2.$version.$time.temp >> lost_in_QC.$version.$time.txt
 
 # transition == 2*binsize, kick it out
 awk '{ if ($5!=2*'$binsize') print $0 }' res3.$version.$time.temp > res4.$version.$time.temp
 echo $[`wc -l res3.$version.$time.temp | awk '{ print $1 }'` - `wc -l res4.$version.$time.temp | awk '{print $1}'`] "genes had transition == 2*binsize - removed." >> $logfile
+awk '{ if ($5==2*'$binsize') print $0,"transition=2binsize" }' res3.$version.$time.temp >> lost_in_QC.$version.$time.txt
 
 # density1 > density2, kick it out
 awk '{ if ($6<0.5*$7) print $0 }' res4.$version.$time.temp > res5.$version.$time.temp
 echo $[`wc -l res4.$version.$time.temp | awk '{ print $1 }'` - `wc -l res5.$version.$time.temp | awk '{print $1}'`] "genes had density1 > 0.5*density2 - removed." >> $logfile
+awk '{ if ($6>=0.5*$7) print $0,"density" }' res4.$version.$time.temp >> lost_in_QC.$version.$time.txt
 
 # transition involves scientific notation, kick it out
 grep -v "e" res5.$version.$time.temp > res6.$version.$time.temp
 echo $[`wc -l res5.$version.$time.temp | awk '{ print $1 }'` - `wc -l res6.$version.$time.temp | awk '{print $1}'`] "genes had scientific notation in their transition - removed." >> $logfile
+grep "e" res5.$version.$time.temp | awk '{ print $0, "sci-notation" }' >> lost_in_QC.$version.$time.txt
 
 # transition overlap with a dREG hit? kick it out
 # make beddy, e.g. CHR, TRANSITION_START, TRANSITION_END, STRAND, GID, NAME, LEN, ROUNDS, TRANSITION, DENSITY1, DENSITY2, GENE_START, GENE_END
@@ -128,6 +134,7 @@ awk '{ if ($8=="+") {{ printf "%s %i %i ", $9, $10+$5, $10+$5+1} { print $8, $1,
 gunzip -c $dREG_list | sed '1d' | bedmap --range $binsize --echo --indicator res.bed.$version.$time.temp - > res2.bed.$version.$time.temp
 grep '|0' res2.bed.$version.$time.temp | awk 'BEGIN{FS="|"}{print $1}' > res3.bed.$version.$time.temp
 echo $[`wc -l res.bed.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.bed.$version.$time.temp | awk '{print $1}'`] "genes had a dREG hit near their transition - removed." >> $logfile
+grep '|1' res2.bed.$version.$time.temp | awk 'BEGIN{FS="|"}{print $1, "dREG" }' >> lost_in_QC.$version.$time.txt
 
 echo "Overall," $[`wc -l res.$version.$time.temp | awk '{ print $1 }'` - `wc -l res3.bed.$version.$time.temp | awk '{print $1}'`] "genes removed for QC." >> $logfile
 
