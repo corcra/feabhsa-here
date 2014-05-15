@@ -4,25 +4,28 @@
 import gzip
 import sys
 
-f = gzip.open('/Users/stephanie/ll/data/genes/refgene.txt.gz','r')
+#f = gzip.open('/Users/stephanie/ll/data/genes/refgene.txt.gz','r')
+f = open('/Users/stephanie/ll/data/genes/Glist_mm9_Stephanie.txt','r')
 exonic = open('/Users/stephanie/ll/data/genes/exonic.bed','w')
 intronic = open('/Users/stephanie/ll/data/genes/intronic.bed','w')
 # headerline
 f.readline()
 
 for line in f:
-    gene_ID = line.split()[1]
+    gene_ID = line.split()[0]
     chro = line.split()[2]
     strand = line.split()[3]
     # this looks a bit confusing, but the information is only used for recording the start of the gene
     if strand=='+':
-        tx_start = line.split()[4]
+        # start of the first exon
+        tx_start = line.split()[5].strip(',').split(',')[0]
     else:
-        tx_start = line.split()[5]
-    tx_end = line.split()[5]
-    exonCount = int(line.split()[8])
-    starts = line.split()[9].strip(',')
-    ends = line.split()[10].strip(',')
+        # end of the last exon
+        tx_start = line.split()[6].strip(',').split(',')[-1]
+    tx_end = line.split()[6].strip(',').split(',')[-1]
+    exonCount = int(line.split()[4])
+    starts = line.split()[5].strip(',')
+    ends = line.split()[6].strip(',')
     if not int(ends.split(',')[-1]) == int(tx_end):
         print ends
         print ends[-1]
