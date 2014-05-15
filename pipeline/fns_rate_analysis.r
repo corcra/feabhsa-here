@@ -92,23 +92,49 @@ roz<-function(d)
 myplot<-function(x,y,xlabel='',ylabel='',arrow=TRUE,labcol='black')
 {
     plot(c(0,1),c(0,1),type='n',xlim=c(-4,4),ylim=c(-4,4),ylab=ylabel,xlab=xlabel,col.lab=labcol,xaxs='i',yaxs='i',main='',yaxt='n',xaxt='n',cex.lab=0.8)
-    points(x,y,pch=16,cex=0.3)
-    axis(side = 1, labels = NA, tck = -0.02, at=seq(-4,4,2),cex.axis=0.8)
-    axis(side = 2, labels = NA, tck = -0.02, at=seq(-4,4,2),cex.axis=0.8)
-    pcaresult<-princomp(cbind(x,y))
-    if(pcaresult$loadings[1,1]>0){
-        arrowdir<--1
-    } else{
-        arrowdir<-1
-    }
+        points(x,y,pch=16,cex=0.3)
+        axis(side = 1, labels = NA, tck = -0.02, at=seq(-4,4,2),cex.axis=0.8)
+        axis(side = 2, labels = NA, tck = -0.02, at=seq(-4,4,2),cex.axis=0.8)
+        pcaresult<-princomp(cbind(x,y))
+        if(pcaresult$loadings[1,1]>0){
+            arrowdir<--1
+        } else{
+            arrowdir<-1
+        }
     r<-(pcaresult$sdev[1]^2/(pcaresult$sdev[1]^2+pcaresult$sdev[2]^2)-0.5)*2
-    if(arrow){
-        arrows(pcaresult$center[1],pcaresult$center[2],pcaresult$center[1]-arrowdir*pcaresult$loadings[1,1]*pcaresult$sdev[1]*r*4,pcaresult$center[2]-arrowdir*pcaresult$loadings[2,1]*pcaresult$sdev[1]*r*4,col='red',length=0.05,lwd=1.5)
-    }
+        if(arrow){
+            arrows(pcaresult$center[1],pcaresult$center[2],pcaresult$center[1]-arrowdir*pcaresult$loadings[1,1]*pcaresult$sdev[1]*r*4,pcaresult$center[2]-arrowdir*pcaresult$loadings[2,1]*pcaresult$sdev[1]*r*4,col='red',length=0.05,lwd=1.5)
+        }
     text(2,3.5,sprintf("r = %1.2f",r),cex=0.8)
 #p<-coef(summary(lm(y~x)))[2,4]
 #if(p<0.001) text(2,-3.5,sprintf("p < 0.001"),cex=0.7)
 #else text(2,-3.5,sprintf("p = %1.3f",p),cex=0.7)
+}
+
+# also from hojoong's script
+rmat<-function(r,zls)
+{
+    n<-nrow(zls)
+        rs<-matrix(nrow=n,ncol=n+1)
+        for(i in 1:n)
+        {
+            rs[i,1]<-abs(cor(zls[i,],r))
+                for(j in 1:n)
+                {
+                    if(i==j) rs[i,j+1]<-0
+                    else rs[i,j+1]<-abs(cor(roz(lm(r~zls[j,])$residuals),zls[i,]))
+                }
+        }
+    vm<-matrix(nrow=n,ncol=n)
+        for(i in 1:n)
+        {
+            t<-rs[i,1]^2
+                for(j in 1:n)
+                {
+                    vm[j,n+1-i]<-(t-rs[i,j+1]^2)/t
+                }
+        }
+    return(vm)
 }
 
 add_covars<-function(data,n_gb,int1len,n_exon,CpG_gb,H3K79me2){
