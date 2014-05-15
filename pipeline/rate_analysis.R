@@ -15,8 +15,9 @@ replicates<-c("B","R")
 #replicates<-c("B","B")
 #replicates<-c("R","R")
 #replicates<-c("C","C")
-get_covariates<-FALSE
+get_covariates<-TRUE
 #get_covariates<-TRUE
+get_region<-TRUE
 
 # --- gene data --- #
 genes<-read.table(paste0("/Users/stephanie/ll/results/",suffix,"/active_genes_Rable.bed"),as.is=TRUE)
@@ -38,9 +39,11 @@ twentyfive<-consistent_over_replicates(twentyfive_1,twentyfive_2,"twentyfive")
 fifty<-consistent_over_replicates(fifty_1,fifty_2,"fifty")
 
 # --- save the region_of_relevance (formerly get_FP_affected_region.r) --- #
-get_region_of_relevance(five,twelve,genes,"early")
-get_region_of_relevance(twelve,twentyfive,genes,"mid")
-get_region_of_relevance(twentyfive,fifty,genes,"late")
+if (get_region){
+    get_region_of_relevance(five,twelve,genes,"early")
+    get_region_of_relevance(twelve,twentyfive,genes,"mid")
+    get_region_of_relevance(twentyfive,fifty,genes,"late")
+}
 
 # --- plot the transitions--- #
 plot_transitions(five,twelve,twentyfive,fifty)
@@ -79,20 +82,20 @@ cat(nrow(data),"genes at",time_point,"time point.\n")
 # --- combine the covariates --- #
 data_covar<-add_covars(data,n_gb,int1len,n_exon,CpG_gb,H3K79me2_gb)
 cat(nrow(data_covar),"genes with covar data.\n")
-cat("Correlation between rate and n_exon:",cor(data_covar$rate,data_covar$n_exon),"\n")
-cat("Correlation between rate and n_gb:",cor(data_covar$rate,data_covar$n_gb),"\n")
+cat("Correlation between rate and n_exon:",cor(data_covar$rate,data_covar$n_exon,method="spearman"),"\n")
+cat("Correlation between rate and n_gb:",cor(data_covar$rate,data_covar$n_gb,method="spearman"),"\n")
 
 # --- only dREG hits --- #
 data_withhit<-subset(data_covar,n_gb>0)
 cat("There are",nrow(data_withhit),"genes with dREG hits.\n")
-cat("Correlation between rate and n_exon:",cor(data_withhit$rate,data_withhit$n_exon),"\n")
-cat("Correlation between rate and n_gb:",cor(data_withhit$rate,data_withhit$n_gb),"\n")
+cat("Correlation between rate and n_exon:",cor(data_withhit$rate,data_withhit$n_exon,method="spearman"),"\n")
+cat("Correlation between rate and n_gb:",cor(data_withhit$rate,data_withhit$n_gb,method="spearman"),"\n")
 
 # --- do comparisons --- #
 in_theirs<-merge(data_covar,comp_rates,by=1)
 cat(nrow(in_theirs),"genes overlap with previous results.\n")
-cat("Correlation between rates:",cor(in_theirs$rate.x,in_theirs$rate.y),"\n")
-cat("Correlation between rate and n_exon (overlapped):",cor(in_theirs$rate.x,in_theirs$n_exon),"\n")
+cat("Correlation between rates:",cor(in_theirs$rate.x,in_theirs$rate.y,method="spearman"),"\n")
+cat("Correlation between rate and n_exon (overlapped):",cor(in_theirs$rate.x,in_theirs$n_exon,method="spearman"),"\n")
 
 new<-!data_covar$name%in%comp_rates$geneID
 data_new<-subset(data_covar,new)
@@ -100,3 +103,22 @@ data_new<-subset(data_covar,new)
 # --- make model --- #
 m_full<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_covar)
 m_withhit<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_withhit)
+roz.m_full<-lm(roz.rate ~ roz.n_gb + roz.int1len + roz.n_exon + roz.CpG + roz.H3K79me2,data=data_covar)
+roz.m_withhit<-lm(roz.rate ~ roz.n_gb + roz.int1len + roz.n_exon + roz.CpG + roz.H3K79me2,data=data_withhit)
+
+# --- compare covariates --- #
+ggplot(data_covar,aes(x=int1len,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=5000)+theme_bw()+ggtitle("Length of intron 1 (with/without dREG hit)")
+ggsave("int1len_hist.pdf")
+ggplot(data_covar,aes(x=n_exon,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=0.02)+theme_bw()+ggtitle("Exon density (per kb) (with/without dREG hit)")
+ggsave("n_exon_hist.pdf")
+ggplot(data_covar,aes(x=CpG,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=1)+theme_bw()+ggtitle("CpG density (per kb) (with/without dREG hit)")
+ggsave("CpG_hist.pdf")
+ggplot(data_covar,aes(x=H3K79me2,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=2)+theme_bw()+ggtitle("H3K79me2 density (per kb) (with/without dREG hit)")
+ggsave("H3K79me2_hist.pdf")
+
+# --- hierarchical investigation --- #
+covar_array<-t(data_covar[,c("n_gb","int1len","n_exon","CpG","H3K79me2")])
+roz.covar_array<-t(data_covar[,c("roz.n_gb","roz.int1len","roz.n_exon","roz.CpG","roz.H3K79me2")])
+covar_label<-c("n_gb","int1len","n_exon","CpG","H3K79me2")
+rownames(covar_array)<-covar_label
+rownames(roz.covar_array)<-covar_label
