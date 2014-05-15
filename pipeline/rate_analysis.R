@@ -2,7 +2,7 @@
 library(ggplot2)
 
 # --- load functions --- #
-source('rate_analysis_fns.r')
+source('fns_rate_analysis.r')
 
 # --- options --- #
 #args<-commandArgs(TRUE)
@@ -15,8 +15,8 @@ replicates<-c("B","R")
 #replicates<-c("B","B")
 #replicates<-c("R","R")
 #replicates<-c("C","C")
-#get_covariates<-FALSE
-get_covariates<-TRUE
+get_covariates<-FALSE
+#get_covariates<-TRUE
 
 # --- gene data --- #
 genes<-read.table(paste0("/Users/stephanie/ll/results/",suffix,"/active_genes_Rable.bed"),as.is=TRUE)
@@ -75,11 +75,18 @@ if (time_point=="early"){
     quit("no")
 }
 cat(nrow(data),"genes at",time_point,"time point.\n")
+
 # --- combine the covariates --- #
 data_covar<-add_covars(data,n_gb,int1len,n_exon,CpG_gb,H3K79me2_gb)
 cat(nrow(data_covar),"genes with covar data.\n")
 cat("Correlation between rate and n_exon:",cor(data_covar$rate,data_covar$n_exon),"\n")
 cat("Correlation between rate and n_gb:",cor(data_covar$rate,data_covar$n_gb),"\n")
+
+# --- only dREG hits --- #
+data_withhit<-subset(data_covar,n_gb>0)
+cat("There are",nrow(data_withhit),"genes with dREG hits.\n")
+cat("Correlation between rate and n_exon:",cor(data_withhit$rate,data_withhit$n_exon),"\n")
+cat("Correlation between rate and n_gb:",cor(data_withhit$rate,data_withhit$n_gb),"\n")
 
 # --- do comparisons --- #
 in_theirs<-merge(data_covar,comp_rates,by=1)
@@ -91,4 +98,5 @@ new<-!data_covar$name%in%comp_rates$geneID
 data_new<-subset(data_covar,new)
 
 # --- make model --- #
-mm<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_covar)
+m_full<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_covar)
+m_withhit<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_withhit)
