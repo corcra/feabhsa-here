@@ -24,9 +24,9 @@ H3K79me2=/Users/stephanie/ll/data/ChIPseq/H3K79me2_sorted.bed.gz
 
 # --- number of dREG hits in region of relevance --- #
 echo "get_covar_minimal.sh: n_gb!"
-echo "name" "n_gb" > $covar_folder/n_gb.txt
+echo "name" "n_gb" "d_gb"> $covar_folder/n_gb.txt
 #gunzip -c $confident | sed '1d' | bedmap --range 250 --echo --count --skip-unmapped --delim "\t" $region - | awk '{ print $4,$7}' >> $covar_folder/n_gb.txt
-gunzip -c $confident | sed '1d' | bedmap --range 250 --echo --count --delim "\t" $region - | awk '{ print $4,$6*1000/($3-$2)}' >> $covar_folder/n_gb.txt
+gunzip -c $confident | sed '1d' | bedmap --range 250 --echo --count --delim "\t" $region - | awk '{ print $4,$6,$6*1000/($3-$2)}' >> $covar_folder/n_gb.txt
 ## if there are no hits with the maybe dataset, count it as no hits...
 #gunzip -c $maybe | sed '1d' | bedmap --range 250 --echo --indicator $region - | grep '|0' | awk '{ print $4,0}' >> $covar_folder/n_gb.txt
 
@@ -39,7 +39,7 @@ awk '{ if ($5==1) print $4, $3-$2 }' $introns >> $covar_folder/int1len.txt
 
 # --- number of exons in region of relevance --- #
 echo "get_covar_minimal.sh: n_exon!"
-echo "name" "n_exon" > $covar_folder/n_exon.txt
+echo "name" "n_exon" "d_exon"> $covar_folder/n_exon.txt
 bedmap --echo --echo-map-id --delim ";" $region $exons | python get_exon_counts.py >> $covar_folder/n_exon.txt
 
 # --- nucleosome density at promoter region --- # ... or is it just position of first nucleosome?
