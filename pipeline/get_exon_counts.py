@@ -11,5 +11,5 @@ for line in sys.stdin:
         if hit == geneid:
             exon_count = exon_count + 1
     exon_density = float(exon_count)*1000/length
-    outline = geneid+"\t"+str(exon_count+"\t"+str(exon_density)
+    outline = geneid+"\t"+str(exon_count)+"\t"+str(exon_density)
     print outline
