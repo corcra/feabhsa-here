@@ -1,5 +1,6 @@
 # This takes the results of run_HMM.sh, extracts rates, and (will) perform analysis.
 library(ggplot2)
+library(ggm)
 
 # --- load functions --- #
 source('fns_rate_analysis.r')
@@ -9,15 +10,17 @@ source('fns_rate_analysis.r')
 suffix<-"40m_SVM"
 #time_point<-args[1]
 #time_point<-"early"
-time_point<-"mid"
+#time_point<-"mid"
 #time_point<-"late"
+time_point<-"to12"
 replicates<-c("B","R")
 #replicates<-c("B","B")
 #replicates<-c("R","R")
 #replicates<-c("C","C")
 get_covariates<-TRUE
-#get_covariates<-TRUE
+#get_covariates<-FALSE
 get_region<-TRUE
+#get_region<-FALSE
 
 # --- gene data --- #
 genes<-read.table(paste0("/Users/stephanie/ll/results/",suffix,"/active_genes_Rable.bed"),as.is=TRUE)
@@ -40,9 +43,11 @@ fifty<-consistent_over_replicates(fifty_1,fifty_2,"fifty")
 
 # --- save the region_of_relevance (formerly get_FP_affected_region.r) --- #
 if (get_region){
-    get_region_of_relevance(five,twelve,genes,"early")
-    get_region_of_relevance(twelve,twentyfive,genes,"mid")
-    get_region_of_relevance(twentyfive,fifty,genes,"late")
+    get_region_of_relevance(five,twelve,genes,"early",NA,NA)
+    get_region_of_relevance(twelve,twentyfive,genes,"mid",7500,30000)
+    get_region_of_relevance(twentyfive,fifty,genes,"late",NA,NA)
+    get_region_of_relevance(NA,twelve,genes,"to12",1000,7500)
+    get_region_of_relevance(NA,twentyfive,genes,"to25",1000,30000)
 }
 
 # --- plot the transitions--- #
@@ -73,11 +78,18 @@ if (time_point=="early"){
     data<-get_rate(twelve,twentyfive,12.5)
 } else if(time_point=="late"){
     data<-get_rate(twentyfive,fifty,25)
+} else if(time_point=="to12"){
+    data<-get_rate(NA,twelve,12.5)
+} else if(time_point=="to25"){
+    data<-get_rate(NA,twentyfive,25)
 } else{
     print("what timepoint did you give me? :(")
     quit("no")
 }
 cat(nrow(data),"genes at",time_point,"time point.\n")
+
+# --- delete at one weird point --- #
+data<-subset(data,rate<4)
 
 # --- combine the covariates --- #
 data_covar<-add_covars(data,n_gb,int1len,n_exon,CpG_gb,H3K79me2_gb)
@@ -91,6 +103,12 @@ cat("There are",nrow(data_withhit),"genes with dREG hits.\n")
 cat("Correlation between rate and n_exon:",cor(data_withhit$rate,data_withhit$n_exon,method="spearman"),"\n")
 cat("Correlation between rate and n_gb:",cor(data_withhit$rate,data_withhit$n_gb,method="spearman"),"\n")
 
+# --- only dREG hits --- #
+data_withexon<-subset(data_covar,n_exon>0)
+cat("There are",nrow(data_withexon),"genes with exons.\n")
+cat("Correlation between rate and n_exon:",cor(data_withexon$rate,data_withexon$n_exon,method="spearman"),"\n")
+cat("Correlation between rate and n_gb:",cor(data_withexon$rate,data_withexon$n_gb,method="spearman"),"\n")
+
 # --- do comparisons --- #
 in_theirs<-merge(data_covar,comp_rates,by=1)
 cat(nrow(in_theirs),"genes overlap with previous results.\n")
@@ -103,8 +121,9 @@ data_new<-subset(data_covar,new)
 # --- make model --- #
 m_full<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_covar)
 m_withhit<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_withhit)
-roz.m_full<-lm(roz.rate ~ roz.n_gb + roz.int1len + roz.n_exon + roz.CpG + roz.H3K79me2,data=data_covar)
-roz.m_withhit<-lm(roz.rate ~ roz.n_gb + roz.int1len + roz.n_exon + roz.CpG + roz.H3K79me2,data=data_withhit)
+m_withexon<-lm(rate ~ n_gb + int1len + n_exon + CpG + H3K79me2,data=data_withexon)
+roz.m_full<-lm(roz(rate) ~ roz(n_gb) + roz(int1len) + roz(n_exon) + roz(CpG) + roz(H3K79me2),data=data_covar)
+roz.m_withhit<-lm(roz(rate) ~ roz(n_gb) + roz(int1len) + roz(n_exon) + roz(CpG) + roz(H3K79me2),data=data_withhit)
 
 # --- compare covariates --- #
 ggplot(data_covar,aes(x=int1len,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=5000)+theme_bw()+ggtitle("Length of intron 1 (with/without dREG hit)")
@@ -115,10 +134,25 @@ ggplot(data_covar,aes(x=CpG,fill=n_gb>0))+geom_histogram(position="identity",aes
 ggsave("CpG_hist.pdf")
 ggplot(data_covar,aes(x=H3K79me2,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=2)+theme_bw()+ggtitle("H3K79me2 density (per kb) (with/without dREG hit)")
 ggsave("H3K79me2_hist.pdf")
+ggplot(data_covar,aes(x=rate,fill=n_gb>0))+geom_histogram(position="identity",aes(y=..density..),alpha=0.7,binwidth=0.1)+theme_bw()+ggtitle("rate (kb/min) (with/without dREG hit)")
+ggsave("rate_hist.pdf")
 
-# --- hierarchical investigation --- #
-covar_array<-t(data_covar[,c("n_gb","int1len","n_exon","CpG","H3K79me2")])
-roz.covar_array<-t(data_covar[,c("roz.n_gb","roz.int1len","roz.n_exon","roz.CpG","roz.H3K79me2")])
-covar_label<-c("n_gb","int1len","n_exon","CpG","H3K79me2")
-rownames(covar_array)<-covar_label
-rownames(roz.covar_array)<-covar_label
+# --- gaussian graphical model --- #
+roz.covar_array<-get_covar_array(data_covar)
+ggm<-get_ggm(data_covar$rate,roz.covar_array,0.05)
+g<-ggm$"g"
+plot(g,vertex.size=8,vertex.color="gray90",vertex.label.family="Helvetica",vertex.label.cex=0.5,vertex.label.color="green3",vertex.frame.color=NA)
+
+# --- nonlinear model (from Andre) --- #
+s=list("b_gb"=-7,"b_exon"=-3,"baserate"=2.5,"b_int1len"=0.01,"b_CpG"=-1,"b_H3K79me2"=0.3)
+nl<-nls(distance~(12.5+(b_gb*n_gb+b_exon*n_exon))*(baserate+b_int1len*int1len+b_CpG*CpG+b_H3K79me2*H3K79me2),data=data_covar,start=s)
+# (fuller)
+sp=list("b_n_gb"=-7,"b_d_gb"=-0.3,"b_n_exon"=-3,"b_d_exon"=-0.1,"baserate"=2.5,"b_int1len"=0.01,"b_CpG"=-1,"b_H3K79me2"=0.3)
+nlp<-nls(distance~(12.5+(b_n_gb*n_gb+b_n_exon*n_exon))*(baserate+b_int1len*int1len+b_CpG*CpG+b_H3K79me2*H3K79me2+b_d_gb*d_gb+b_d_exon*d_exon),data=data_covar,start=sp)
+
+# (using only exons and no dREG)
+e=list("b_n_exon"=-3,"baserate"=2.5,"b_int1len"=0.01,"b_CpG"=-1,"b_H3K79me2"=0.3)
+ne<-nls(distance~(12.5+(b_n_exon*n_exon))*(baserate+b_int1len*int1len+b_CpG*CpG+b_H3K79me2*H3K79me2),data=data_covar,start=e)
+ep=list("b_n_exon"=-3,"b_d_exon"=-0.3,"baserate"=2.5,"b_int1len"=0.01,"b_CpG"=-1,"b_H3K79me2"=0.3)
+nep<-nls(distance~(12.5+(b_n_exon*n_exon))*(baserate+b_int1len*int1len+b_CpG*CpG+b_H3K79me2*H3K79me2+b_d_exon*d_exon),data=data_covar,start=ep)
+# --- n_exon and n_gb
