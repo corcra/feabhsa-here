@@ -33,9 +33,9 @@ for line in infile:
     uniq_start=line.split()[1]
     uniq_end=line.split()[2]
     # gonna look for the smallest region which contributed to the final region
+    # start with this claim...
     smallest = int(uniq_end)-int(uniq_start)
     when_smallest=re.sub('_\d+[|]+[chr]*[1-9MXY]*[1-9]*','',line.split()[3])
-#    when_smallest=re.sub('[|]+[chr]+[1-9MXY][1-9]*','',line.split()[3])
     for time in times:
         if datatype+'_'+time+'_' in line:
             # yep, this region appeared at this timepoint... mark it down!
@@ -44,7 +44,7 @@ for line in infile:
             where=[s.find(datatype+'_'+time+'_')>0 for s in line.split('|')].index(True)
             segment=line.split('|')[where]
             start=segment.split()[1]
-            # expand the boundaries
+            # expand the boundaries (this shouldn't be necessary given preprocess_master)
             if int(start)<int(uniq_start):
                 uniq_start = start
             end=segment.split()[2]
