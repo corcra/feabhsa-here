@@ -31,7 +31,7 @@ mytheme<-theme(plot.margin=unit(c(2,2,2,2),"cm"),axis.title.x=element_text(vjust
 #Quick check: how many multiply-assigned regions do we have?
 double_regions<-sum((data$gene_start+1*(data$gene_body!=0)+data$non_gene)==2)
 triple_regions<-sum((data$gene_start+1*(data$gene_body!=0)+data$non_gene)==3)
-cat("visualisation.r: There are",double_regions,"doubly-assigned and",triple_regions,"triply-assigned regions.\n")
+cat("visualisation.r: There are",double_regions,"doubly-assigned and",triple_regions,"triply-assigned elements.\n")
 
 # Condense regions
 regions<-ifelse(data$gene_start==1,"gene_start",ifelse(data$gene_body!=0,"gene_body","non_gene"))
@@ -40,13 +40,20 @@ data<-cbind(data,regions)
 region_cols<-c("firebrick1","orange1","turquoise3","gray")
 #region_cols<-c("orange1","turquoise3","gray")
 
+# --- distribution of hits etc. ---
+gs<-sum(regions=="gene_start")
+gb<-sum(regions=="gene_body")
+ng<-sum(regions=="non_gene")
+cc<-c(gs,gb,ng)
+ggplot(data,aes(x=regions,fill=regions))+geom_histogram()+mytheme+scale_fill_manual(values=region_cols)+stat_bin(aes(label=..count..,y=..count..-400),geom="text")+xlab("Genomic region")
+
 # First appearances
 first_appearance<-time_points[apply(data[,time_points],1,function(x) which(x==1)[1])]
 first_appearance<-factor(first_appearance,time_points)
 data<-cbind(data,first_appearance)
 
 # How often are the regions seen? (aross timepoints)
-cat("visualisation.r: How often is each region seen?\n")
+cat("visualisation.r: How often is each element seen?\n")
 howmany_prefac<-rowSums(data[,time_points])
 howmany<-factor(howmany_prefac,c(1,2,3,4,5,6))
 data_howfreq<-data.frame(regions,howmany,first_appearance)
@@ -54,13 +61,13 @@ ggplot(data_howfreq,aes(x=howmany,fill=regions))+geom_histogram(position="dodge"
 ggsave("../pdfs/repetition_regions.pdf",width=10)
 
 #How consistent are they?
-cat("visualisation.r: When do consistent regions appear?\n")
+cat("visualisation.r: When do consistent elements appear?\n")
 viol_prefac<-get_violations(data[,time_points])
 consistent<-viol_prefac==0
 consistent<-factor(consistent,c(TRUE,FALSE))
 data_consistent<-data.frame(regions,consistent,first_appearance)
-ggplot(data_consistent,aes(x=first_appearance,fill=consistent))+facet_grid(consistent~regions)+geom_histogram(position="dodge")+mytheme+scale_fill_manual(values=c("darkorchid1","grey60"))+ggtitle("When do consistent regions appear? (consistent meaning that once they appear, they do not disappear)")
-ggsave("../pdfs/consistent_regions.pdf",width=10)
+ggplot(data_consistent,aes(x=first_appearance,fill=consistent))+facet_grid(consistent~regions)+geom_histogram(position="dodge")+mytheme+scale_fill_manual(values=c("darkorchid1","grey60"))+ggtitle("When do consistent elements appear? (consistent meaning that once they appear, they do not disappear)")
+ggsave("../pdfs/consistent_elements.pdf",width=10)
 
 # How many violations? (e.g. disappearance after appearance)
 cat("visualisation.r: violations\n")
@@ -70,17 +77,17 @@ ggplot(data_viol,aes(x=violations,fill=regions))+geom_histogram(position="dodge"
 ggsave("../pdfs/violations_regions.pdf",width=10)
 
 # Now, are they earlier (<12.5) or later(>12.5)? (do this better!) (STRICTLY early v. STRICTLY late...)
-cat("visualisation.r: regions only appearing in early/late timepoints?\n")
+cat("visualisation.r: elements only appearing in early/late timepoints?\n")
 early<-rowMeans(data[,c("X12.5","X25","X50")])==0
 late<-rowMeans(data[,c("X0","X2","X5")])==0
 all<-rowMeans(data[,time_points])==1
 when_restricted<-ifelse(all,"all",ifelse(early,"early only",ifelse(late,"late only","mixed")))
 when_restricted<-factor(when_restricted,c("all","early only","late only","mixed"))
 data_whenrestricted<-data.frame(regions,when_restricted)
-ggplot(data_whenrestricted,aes(x=when_restricted,fill=regions))+geom_histogram(position="dodge")+mytheme+scale_fill_manual(values=c(region_cols))+xlab("Only appears when...")+ggtitle("Many regions are only seen at early timepoints (WT,2min,5min)")
-ggsave("../pdfs/earlylate_regions.pdf",width=10)
+ggplot(data_whenrestricted,aes(x=when_restricted,fill=regions))+geom_histogram(position="dodge")+mytheme+scale_fill_manual(values=c(region_cols))+xlab("Only appears when...")+ggtitle("Many elements are only seen at early timepoints (WT,2min,5min)")
+ggsave("../pdfs/earlylate_elements.pdf",width=10)
 
-# Expand regions - this is a giant dataframe with duplicated entries whenever regions appear in multiple timepoints - the purpose is to be able to simultaneously plot not just new points but all points at a time, acces times via 'when'
+# Expand elements - this is a giant dataframe with duplicated entries whenever elements appear in multiple timepoints - the purpose is to be able to simultaneously plot not just new points but all points at a time, acces times via 'when'
 data_exp<-data.frame()
 for (time in time_points){
     #time_data<-data[data[,time]==1,-which(names(data)%in%time_points)]
@@ -91,24 +98,24 @@ for (time in time_points){
     data_exp<-rbind(data_exp,t_d)
 }
 
-# For regions that are only seen once... when are they seen?
-#cat("visualisation.r: Loner regions\n")
+# For elements that are only seen once... when are they seen?
+#cat("visualisation.r: Loner elements\n")
 #data_loners<-data_howfreq[howmany_prefac==1,]
-#ggplot(data_loners,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+xlab("Timepoint")+ggtitle("For regions appearing only once, when was it?")
+#ggplot(data_loners,aes(x=first_appearance,fill=regions))+geom_histogram(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+xlab("Timepoint")+ggtitle("For elements appearing only once, when was it?")+facet_grid(~regions)
 #ggsave("../pdfs/loner_regions.pdf",width=10)
 
 # When do the regions first appear? (note, they may disappear and reappear - this takes very first appearance)
-cat("visualisation.r: First appearance of regions!\n")
+cat("visualisation.r: First appearance of elements!\n")
 ggplot(data,aes(x=first_appearance,fill=regions))+geom_bar(position="dodge")+scale_fill_manual(values=region_cols)+mytheme+facet_grid(~regions)
 ggsave("../pdfs/first_appearance.pdf",width=10)
 
-# What fraction of the regions appear for the first time at this timepoint?
+# What fraction of the elements appear for the first time at this timepoint?
 new_bool<-data_exp$when==data_exp$first_appearance
 new<-ifelse(new_bool,ifelse(data_exp$regions=="gene_start", "new (gene_start)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),"old")
 new<-factor(new,c("new (gene_start)","new (gene body)","new (non gene)","old"))
 new_cols<-c(region_cols[1:3],"grey90")
 data_new<-cbind(data_exp,new)
-ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="fill")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Fraction of regions which are new at this timepoint")+xlab("Timepoint")+ggtitle("Does time after flavopiridol treatment aid discovery of intragenic regions?")
+ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="fill")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Fraction of elements which are new at this timepoint")+xlab("Timepoint")+ggtitle("Does time after flavopiridol treatment aid discovery of intragenic elements?")
 ggsave("../pdfs/fraction_new.pdf",width=10)
 
 new<-ifelse(new_bool,ifelse(data_exp$regions=="gene_start", "new (gene_start)", ifelse(data_exp$regions=="gene_body", "new (gene body)", "new (non gene)")),ifelse(data_exp$regions=="gene_start", "old (gene_start)", ifelse(data_exp$regions=="gene_body", "old (gene body)","old (non gene)")))
@@ -116,7 +123,7 @@ new<-factor(new,c("new (gene_start)","old (gene_start)","new (gene body)","old (
 data_new<-cbind(data_exp,new)
 new_cols<-c(region_cols[1],"firebrick4",region_cols[2],"orange3",region_cols[3],"turquoise4")
 #new_cols<-c(region_cols[1],"orange3",region_cols[2],"turquoise4")
-ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="stack")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Number of regions  at this timepoint")+xlab("Timepoint")
+ggplot(data_new,aes(x=when,fill=new))+geom_bar(position="stack")+scale_fill_manual(values=new_cols)+mytheme+facet_grid(~regions)+ylab("Number of elements  at this timepoint")+xlab("Timepoint")
 ggsave("../pdfs/total_regions.pdf",width=10)
 
 new_gb<-subset(data_new,new=="new (gene body)")
@@ -126,23 +133,24 @@ new_gs<-subset(data_new,new=="new (gene_start)")
 old_ng<-subset(data_new,new=="old (non gene)")
 new_ng<-subset(data_new,new=="new (non gene)")
 
-# Region sizes
-cat("visualisation.r: Region sizes!\n")
+# Element sizes
+cat("visualisation.r: Element sizes!\n")
 sizes<-data$end-data$start
 size_dat<-data.frame(sizes,regions)
-ggplot(size_dat,aes(x=sizes,fill=regions))+geom_histogram(binwidth=50)+mytheme+xlim(0,2000)+scale_fill_manual(values=region_cols)+ggtitle("dREG Region sizes")+xlab("Size of dREG region (bp)")+ylab("Counts")+facet_grid(~regions,margins=FALSE,scales="free")
+ggplot(size_dat,aes(x=sizes,fill=regions))+geom_histogram(binwidth=50)+mytheme+xlim(0,2000)+scale_fill_manual(values=region_cols)+ggtitle("dREG Element sizes")+xlab("Size of dREG element (bp)")+ylab("Counts")+facet_grid(~regions,margins=FALSE,scales="free")
 ggsave("../pdfs/region_sizes.pdf",width=10)
-ggplot(size_dat,aes(x=sizes))+geom_histogram(binwidth=50,fill="gray")+mytheme+xlim(0,2000)+ggtitle("dREG Region sizes (all)")+xlab("Size of dREG region (bp)")+ylab("Counts")
+ggplot(size_dat,aes(x=sizes))+geom_histogram(binwidth=50,fill="gray")+mytheme+xlim(0,2000)+ggtitle("dREG Element sizes (all)")+xlab("Size of dREG element (bp)")+ylab("Counts")
 ggsave("../pdfs/all_sizes.pdf")
 
 # Inflation factor
-#cat("visualisation.r: Inflation!\n")
-#inflation<-data$inflation
-#inf_dat<-data.frame(inflation,regions,first_appearance)
-#ggplot(inf_dat,aes(x=inflation,fill=regions))+geom_histogram(binwidth=0.1)+mytheme+s#cale_fill_manual(values=region_cols)+ggtitle("Ratio by which smallest contributing r#egion was embiggened")+xlab("Inflation factor")+ylab("Counts")+facet_grid(first_appe#arance~regions,margins=FALSE,scales="free")+xlim(0,7.5)
-#ggsave("../pdfs/region_inflation.pdf",width=10)
-#ggplot(inf_dat,aes(x=inflation))+geom_histogram(binwidth=0.5,fill="gray")+mytheme+gg#title("Ratio by which smallest contributing region was embiggened (all)")+xlab("Infl#ation factor")+ylab("Counts")+xlim(0,20)
-#ggsave("../pdfs/all_inflation.pdf")
+cat("visualisation.r: Inflation!\n")
+inflation<-data$inflation
+inf_dat<-data.frame(inflation,regions,first_appearance)
+ggplot(inf_dat,aes(x=inflation,fill=regions))+geom_histogram(binwidth=0.5)+mytheme+scale_fill_manual(values=region_cols)+ggtitle("Ratio by which smallest contributing element was embiggened")+xlab("Inflation factor")+ylab("Counts")+facet_grid(~regions)+xlim(1,20)
+#+facet_grid(first_appearance~regions,margins=FALSE,scales="free")+xlim(0,7.5)
+ggsave("../pdfs/region_inflation.pdf",width=10)
+ggplot(inf_dat,aes(x=inflation))+geom_histogram(binwidth=0.5,fill="gray")+mytheme+ggtitle("Ratio by which smallest contributing element was embiggened (all)")+xlab("Inflation factor")+ylab("Counts")+xlim(0,20)
+ggsave("../pdfs/all_inflation.pdf")
 
 # Distance to closest gene_start
 cat("visualisation.r: Distance to closest gene_start!\n")
@@ -151,11 +159,12 @@ regions_exp<-data_exp$regions
 when<-data_exp$when
 dist_dat<-data.frame(distance,regions_exp,when,new_bool)
 affected<-dist_dat$distance<time_thresh[dist_dat$when]
-thresh<-ifelse(affected,"area cleared by FP treatment",ifelse(dist_dat$regions_exp=="gene_body","unaffected (gene body)","unaffected (non gene)"))
+thresh<-ifelse(affected,ifelse(dist_dat$regions_exp=="gene_body", "area cleared by FP treatment", "unaffected (non gene)"), ifelse(dist_dat$regions_exp=="gene_body","unaffected (gene body)","unaffected (non gene)"))
 thresh_cols<-c("darkorchid1",region_cols[2],region_cols[3])
 dist_dat<-cbind(dist_dat,thresh)
 names(dist_dat)<-c("distance","regions","when","new","thresh")
 dist_dat<-subset(dist_dat,regions!="gene_start")
+dist_dat<-subset(dist_dat,distance>0)
 #cat("Specifying dist_dat to only new hits...\n")
 #dist_dat<-subset(dist_dat,new_bool)
 
