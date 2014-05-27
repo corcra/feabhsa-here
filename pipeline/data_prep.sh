@@ -26,7 +26,7 @@ proc_high=$results/dREG_regions_proc_$THRE_high.bed.gz
 pre_QC_confident=$results/dREG_regions_preQC_$THRE_high.bed.gz
 confident=$results/dREG_regions_confident_$THRE_high.bed.gz
 # --- uncertain ---
-raw_low=$results/dREG_regions_maybe_raw_$THRE_low.bed.gz
+raw_low=$results/dREG_regions_$THRE_low.bed.gz
 proc_low=$results/dREG_regions_maybe_proc_$THRE_low.bed.gz
 maybe=$results/dREG_regions_maybe_$THRE_low.bed.gz
 
@@ -73,6 +73,8 @@ do
     echo "Getting low-confidence regions."
     awk 'BEGIN{OFS="\t"} ($4 > '"$THRE_low"') { print $1,$2-50,$3+51,$4 }' $preds.temp | sort-bed - | bedops --merge - | awk 'BEGIN{OFS="\t"}{ print $1, $2, $3, "'$datatype'_" "'${datatime/min/}'_" NR }' > $low_pos.temp
 
+    rm -v $preds.temp
+
     # --- high-confidence --- #
     # Create the master list, if necessary
     if ! [ -a $raw_high ]
@@ -80,24 +82,12 @@ do
         echo "Creating master list (high conf)!"
         gzip -c $high_pos.temp > $raw_high
     fi
-    
-    # Checks if this data already exists in the master list (high)
-    if gunzip -c $raw_high | grep -q $datatype\_${datatime/min/}_
-    then
-        echo "Master list (high-conf) already includes these regions - skipping."
-    else
-        # Adds regions to existing list (assume same if ANY overlap between sets)
-        echo "Updating master list."
-        gunzip -c $raw_high | bedmap --delim '|' --multidelim '|' --echo --indicator $high_pos.temp - > new_or_old.temp
-        awk 'BEGIN{FS="|"}{ if ($2==0) print $1 }' new_or_old.temp > new.temp
-        awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' new_or_old.temp > old.temp
-        gunzip -c $raw_high | bedmap --delim '|' --multidelim '|' --echo --echo-map - old.temp  > raw_high.temp
-        cat raw_high.temp new.temp | python preprocess_master.py | sort-bed -  > raw_high_updated.temp
-        gzip -c raw_high_updated.temp > $raw_high
-    fi
+   
+    gunzip -c $raw_high > raw_high.temp
+    cat $high_pos.temp raw_high.temp > raw_high_updated.temp
+    gzip -c raw_high_updated.temp > $raw_high
   
     gzip -c $high_pos.temp > $high_pos
-    rm -v $high_pos.temp
 
     # --- low-confidence --- #
     if ! [ -a $raw_low ]
@@ -106,36 +96,34 @@ do
         gzip -c $low_pos.temp > $raw_low
     fi
 
-    # Checks if this data already exists in the master list (low)
-    if gunzip -c $raw_low | grep -q $datatype\_${datatime/min/}_
-    then
-        echo "Master list (low conf) already includes these regions - skipping."
-    else
-        # Adds regions to existing list (assume same if ANY overlap between sets)
-        echo "Updating master list."
-        gunzip -c $raw_low | bedmap --delim '|' --multidelim '|' --echo --indicator $low_pos.temp - > new_or_old.temp
-        awk 'BEGIN{FS="|"}{ if ($2==0) print $1 }' new_or_old.temp > new.temp
-        awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' new_or_old.temp > old.temp
-        gunzip -c $raw_low | bedmap --delim '|' --multidelim '|' --echo --echo-map - old.temp  > raw_low.temp
-        cat raw_low.temp new.temp | python preprocess_master.py | sort-bed - > raw_low_updated.temp
-        gzip -c raw_low_updated.temp > $raw_low
-    fi
+    gunzip -c $raw_low > raw_low.temp
+    cat $low_pos.temp raw_low.temp > raw_low_updated.temp
+    gzip -c raw_low_updated.temp > $raw_low
 
     gzip -c $low_pos.temp > $low_pos
-    rm -v $low_pos.temp
 
-    # Tidy up
-    rm -v $preds.temp
 done
 
-# Imagine elements nucleated by two non-overlapping regions at 0 min... by the time the other timepoints have 'chipped in', these dudes might overlap! That's a problem. merge_master will combine these regions!
-bedmap --count --echo - raw_high_updated.temp | python merge_master.py | gzip -c > $raw_high
-bedmap --count --echo - raw_low_updated.temp | python merge_master.py | gzip -c > $raw_low
+gunzip -c $raw_high | sort-bed - | bedops --merge - | awk '{ print $1, $2, $3, "FP_NA_"NR }' > merged_high.temp
+gunzip -c $raw_low | sort-bed - | bedops --merge - | awk '{ print $1, $2, $3, "FP_lNA_"NR }' > merged_low.temp
+
+# --- now check overlaps with the time-points, to find out what contributed and when... --- #
+for datatime in 0min 2min 5min 12.5min 25min 50min
+do
+    echo "Overlapping with" $datatime
+    high_pos=$results/$datatype\_$datatime.pos.$THRE_high.bedGraph.gz
+    low_pos=$results/$datatype\_$datatime.pos.$THRE_low.bedGraph.gz
+
+    bedmap --echo --echo-map --multidelim '|' merged_high.temp $high_pos.temp > merged_high2.temp
+    mv merged_high2.temp merged_high.temp
+    bedmap --echo --echo-map --multidelim '|' merged_low.temp $low_pos.temp >  merged_low2.temp
+    mv merged_low2.temp merged_low.temp
+done
 
 # Call on the other script to tidy this up!
 echo "Master files created, processing!"
-python process_master.py $raw_high $proc_high $datatype
-python process_master.py $raw_low $proc_low $datatype
+python process_master.py merged_high.temp $proc_high $datatype
+python process_master.py merged_low.temp $proc_low $datatype
 
 echo "Looking at overlap with genomic regions and ChIPseq data!"
 awk 'BEGIN{OFS="\t"}{ if ($6=="+") { print $1, $2, $2+1, $4, $6 } else { print $1, $3-1, $3, $4, $6 } }' $gene_list > gene_starts.temp
