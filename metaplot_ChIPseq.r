@@ -52,9 +52,9 @@ if(!preprocess){
     H3_data$region_name<-factor(H3_data$region_name,c("gene_start","gene_body","non_gene"))
     plot_metaplot(H3_data,"H3")
 } else{
-    gene_start<-read.table('/Users/stephanie/ll/results/FP/dREG_gs.bed')
-    gene_body<-read.table('/Users/stephanie/ll/results/FP/dREG_gb.bed')
-    non_gene<-read.table('/Users/stephanie/ll/results/FP/dREG_ng.bed')
+    gene_start<-read.table('/Users/stephanie/ll/results/40m_SVM/metaplot/dREG_gs.bed')
+    gene_body<-read.table('/Users/stephanie/ll/results/40m_SVM/metaplot/dREG_gb.bed')
+    non_gene<-read.table('/Users/stephanie/ll/results/40m_SVM/metaplot/dREG_ng.bed')
 
     cat("H3K4me1!\n")
     H3K4me1<-load.bigWig(paste0('/Users/stephanie/ll/data/ChIPseq/bw/H3K4me1_Meiss.sorted',normstring,'.bw'))

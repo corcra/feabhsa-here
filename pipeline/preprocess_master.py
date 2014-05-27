@@ -5,7 +5,7 @@ i=0
 
 for line in sys.stdin:
     i=i+1
-    bypipe = line.split('|')
+    bypipe = line.strip().split('|')
     # first line is kinda the general everything-keeper, it will contain the union of all reigons (e.g. the final region)... the purpose is to enable the bedmap operation to detect overlaps
     overall = bypipe[0]
     overall_chr = overall.split()[0]

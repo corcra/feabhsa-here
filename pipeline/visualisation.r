@@ -6,12 +6,14 @@ source('vis_fns.r')
 
 args<-commandArgs(TRUE)
 #datapath<-args[1]
-datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
+#datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
+datapath<-'/Users/stephanie/ll/data/creyghton/mine_in_creyghton.bed'
 #datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_preQC_0.8.bed.gz'
 #datapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_maybe_0.5.bed.gz'
 #datapath<-'/Users/stephanie/ll/data/known_enhancers/dREG_known.bed.gz'
 #datapath<-'/Users/stephanie/ll/data/known_enhancers/dREG_known_active.bed.gz'
 fakedatapath<-'/Users/stephanie/ll/results/fake/fake_marked.bed.gz'
+#fakedatapath<-'/Users/stephanie/ll/results/40m_SVM/dREG_regions_confident_0.8.bed.gz'
 data<-read.table(datapath,header=T,na.strings="NAN",as.is=TRUE)
 fakedata<-read.table(fakedatapath,header=T,na.strings="NAN",as.is=TRUE)
 n<-nrow(data)
@@ -208,14 +210,14 @@ mod_dat<-mod_dat[is.finite(mod_dat$long_counts),]
 mod_dat<-mod_dat[mod_dat$long_counts<7,]
 # set up the names etc.
 names(mod_dat)<-c("dREG_id","mods","counts","regions","first_appearance")
-ggplot(mod_dat,aes(x=regions,y=counts,fill=regions))+geom_boxplot(position="dodge",notch=TRUE)+facet_wrap(~mods,scales="free_y")+mytheme+ylab("Histone marks per base (per million read) : log2")+xlab("Marks and genomic regions")+scale_fill_manual(values=c(region_cols,region_cols[4],region_cols[4]))+scale_y_continuous(trans=log2_trans(),labels=trans_format("log2",math_format(2^.x)),breaks=2**seq(-10,1))
+ggplot(mod_dat,aes(x=regions,y=counts,fill=regions))+geom_boxplot(position="dodge",notch=FALSE)+facet_wrap(~mods,scales="free_y")+mytheme+ylab("Histone marks per base (per million read) : log2")+xlab("Marks and genomic regions")+scale_fill_manual(values=c(region_cols,region_cols[4],region_cols[4]))+scale_y_continuous(trans=log2_trans(),labels=trans_format("log2",math_format(2^.x)),breaks=2**seq(-10,1))
 ggsave("../pdfs/histone_regions.pdf",width=10)
 
 # now do it all again for the fake data
 fake_long_counts<-vector()
 for (mod in mods){
     mod_norm<-as.numeric(norms[mod])
-    fake_long_counts<-c(fake_long_counts,counts_per_region(fakedata$start,fakedata$end,fakedata[,mod],mod_norm))
+    fake_long_counts<-c(fake_long_counts,counts_per_region(fakedata$start,fakedata$end,as.numeric(fakedata[,mod]),mod_norm))
 }
 fake_n_mods<-length(mods)
 fake_mod_names<-rep(mods,each=nrow(fakedata))
@@ -236,5 +238,5 @@ regions_both<-c(as.character(mod_dat$regions),paste(as.character(fake_mod_dat$re
 regions_both<-factor(regions_both,c("gene_start","gene_body","non_gene","gene_start (bg)","gene_body (bg)","non_gene (bg)"))
 mod_both<-rbind(mod_dat,fake_mod_dat)
 mod_both<-cbind(mod_both,regions_both)
-ggplot(mod_both,aes(x=regions,y=counts,fill=regions_both))+geom_boxplot(position="dodge",notch=TRUE)+facet_wrap(~mods,scales="free_y")+mytheme+ylab("Histone marks per base (per million read) : log2")+xlab("Marks and genomic regions")+scale_fill_manual(values=c(region_cols,region_cols[4],region_cols[4]))+scale_y_continuous(trans=log2_trans(),labels=trans_format("log2",math_format(2^.x)),breaks=2**seq(-10,1))
+ggplot(mod_both,aes(x=regions,y=counts,fill=regions_both))+geom_boxplot(position="dodge",notch=FALSE)+facet_wrap(~mods,scales="free_y")+mytheme+ylab("Histone marks per base (per million read) : log2")+xlab("Marks and genomic regions")+scale_fill_manual(values=c(region_cols,region_cols[4],region_cols[4]))+scale_y_continuous(trans=log2_trans(),labels=trans_format("log2",math_format(2^.x)),breaks=2**seq(-10,1))
 ggsave("../pdfs/histone_regions_withbg.pdf",width=13)

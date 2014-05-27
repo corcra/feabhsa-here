@@ -20,7 +20,13 @@ elif datatype=='TRP':
 
 n=0
 #master=gzip.open(base+datatype+'_dREG_regions.bed.gz','r')
-infile=gzip.open(infile_path,'r')
+if '.gz' in infile_path:
+    print 'process_master.py: gzipped file!'
+    infile=gzip.open(infile_path,'r')
+else:
+    print 'process_master.py: non-gzipped file!'
+    infile=open(infile_path,'r')
+
 outfile=gzip.open(outfile_path,'w')
 
 header='chr\tstart\tend\tdREG_id\t'+'\t'.join(times)+'\tinflation\twhen_smallest'+'\n'
@@ -41,19 +47,22 @@ for line in infile:
             # yep, this region appeared at this timepoint... mark it down!
             time_pattern.append('1')
             # split the line into timepoint-data (by |), ask which one has the timepoint we want, then isolate that segment
-            where=[s.find(datatype+'_'+time+'_')>0 for s in line.split('|')].index(True)
-            segment=line.split('|')[where]
-            start=segment.split()[1]
-            # expand the boundaries (this shouldn't be necessary given preprocess_master)
-            if int(start)<int(uniq_start):
-                uniq_start = start
-            end=segment.split()[2]
-            if int(end)>int(uniq_end):
-                uniq_end = end
-            size=int(end)-int(start)
-            if size<smallest:
-                smallest = size
-                when_smallest=re.sub('_\d$','',segment.split()[3])
+  #          where = [m.start() for m in re.finditer(datatype+'_'+time+'_',line.split('|')]
+            where_bool=[s.find(datatype+'_'+time+'_')>0 for s in line.split('|')]
+            where = [bb for bb,boolean in enumerate(where_bool) if boolean]
+            for res in where:
+                segment=line.split('|')[res]
+                start=segment.split()[1]
+                # expand the boundaries (this shouldn't be necessary given preprocess_master)
+                if int(start)<int(uniq_start):
+                    uniq_start = start
+                end=segment.split()[2]
+                if int(end)>int(uniq_end):
+                    uniq_end = end
+                size=int(end)-int(start)
+                if size<=smallest:
+                    smallest = size
+                    when_smallest=re.sub('_\d$','',segment.split()[3])
         else:
             time_pattern.append('0')
     # compared to the smallest hit in this region, how much has our final region expanded?

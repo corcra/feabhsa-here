@@ -51,7 +51,7 @@ do
     # Set up vars
     preds=$folder/$datatype\_$datatime.predictions.bedGraph.gz
 
-    # remove multiply-mapped regions
+    # remove multiply-mapped regions ... actually, should be doing this pre-dREG!
     # using map-id seems weird, but in the bedgraph the value goes in the fourth column
     gunzip -c $preds | bedmap --skip-unmapped --echo --echo-map-id - $mappable | awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' > $preds.temp
     gunzip -c $preds > $preds.temp
@@ -92,13 +92,12 @@ do
         awk 'BEGIN{FS="|"}{ if ($2==0) print $1 }' new_or_old.temp > new.temp
         awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' new_or_old.temp > old.temp
         gunzip -c $raw_high | bedmap --delim '|' --multidelim '|' --echo --echo-map - old.temp  > raw_high.temp
-        cat raw_high.temp new.temp | sort-bed - > raw_high_updated.temp
+        cat raw_high.temp new.temp | python preprocess_master.py | sort-bed -  > raw_high_updated.temp
         gzip -c raw_high_updated.temp > $raw_high
     fi
   
     gzip -c $high_pos.temp > $high_pos
     rm -v $high_pos.temp
-    rm -v *.temp
 
     # --- low-confidence --- #
     if ! [ -a $raw_low ]
@@ -118,17 +117,20 @@ do
         awk 'BEGIN{FS="|"}{ if ($2==0) print $1 }' new_or_old.temp > new.temp
         awk 'BEGIN{FS="|"}{ if ($2==1) print $1 }' new_or_old.temp > old.temp
         gunzip -c $raw_low | bedmap --delim '|' --multidelim '|' --echo --echo-map - old.temp  > raw_low.temp
-        cat raw_low.temp new.temp | sort-bed - > raw_low_updated.temp
+        cat raw_low.temp new.temp | python preprocess_master.py | sort-bed - > raw_low_updated.temp
         gzip -c raw_low_updated.temp > $raw_low
     fi
 
     gzip -c $low_pos.temp > $low_pos
     rm -v $low_pos.temp
-    rm -v *.temp
 
     # Tidy up
     rm -v $preds.temp
 done
+
+# Imagine elements nucleated by two non-overlapping regions at 0 min... by the time the other timepoints have 'chipped in', these dudes might overlap! That's a problem. merge_master will combine these regions!
+bedmap --count --echo - raw_high_updated.temp | python merge_master.py | gzip -c > $raw_high
+bedmap --count --echo - raw_low_updated.temp | python merge_master.py | gzip -c > $raw_low
 
 # Call on the other script to tidy this up!
 echo "Master files created, processing!"
@@ -203,7 +205,7 @@ echo "# Low confidence regions:" `wc -l comb_low.temp | awk '{ print $1 }'` >> $
 # --- Clean up ---- #
 echo "Tidying up!"
 #rm -v *.temp
-rm -v $raw_high
-rm -v $raw_low
-rm -v $proc_high
-rm -v $proc_low
+#rm -v $raw_high
+#rm -v $raw_low
+#rm -v $proc_high
+#rm -v $proc_low
